@@ -579,13 +579,20 @@ function addToCart(id) {
         const imageUrl = fixImagePath(product.main_image);
 
         cart.push({
-            id: product.id,
-            name: product.name,
-            price: product.price,
-            stock_quantity: product.stock_quantity,
-            image: imageUrl,  // درست شد!
-            quantity: 1
-        });
+    id: product.id,
+    name: product.name,
+    price: product.price,                  // قیمت اصلی
+    originalPrice: product.originalPrice,  // قیمت قبل تخفیف
+    finalPrice: product.finalPrice,        // قیمت با تخفیف
+    discount: product.discount || 0,       // مبلغ تخفیف
+    discountPercent: product.discount 
+        ? Math.round((product.discount / product.originalPrice) * 100)
+        : 0,
+    stock_quantity: product.stock_quantity,
+    image: fixImagePath(product.main_image),
+    quantity: 1
+});
+
     }
 
     saveCart();
@@ -604,15 +611,28 @@ function openCart() {
     if (cart.length === 0) {
         cartItems.innerHTML = `<p class="text-center text-gray-500">سبد خرید شما خالی است</p>`;
         cartTotal.textContent = "0 تومان";
-    } else {
+    } 
+    else {
         cartItems.innerHTML = cart.map(item => `
+
             <div class="flex items-center gap-4 bg-gray-50 p-4 rounded-lg">
 
                 <img src="${item.image}" class="w-20 h-20 rounded object-cover" alt="${item.name}">
 
                 <div class="flex-1">
                     <h4 class="font-bold">${item.name}</h4>
-                    <p class="text-[#008B8B]">${item.price.toLocaleString()} تومان</p>
+
+                    ${
+                        item.discountPercent > 0 
+                        ? `
+                            <p class="text-[#008B8B] font-bold">${item.finalPrice.toLocaleString()} تومان</p>
+                            <p class="text-red-500 text-sm line-through">${item.originalPrice.toLocaleString()} تومان</p>
+                            <p class="text-green-600 text-xs">${item.discountPercent}% تخفیف</p>
+                          `
+                        : `
+                            <p class="text-[#008B8B] font-bold">${item.price.toLocaleString()} تومان</p>
+                          `
+                    }
                 </div>
 
                 <div class="flex items-center gap-2">
@@ -623,9 +643,17 @@ function openCart() {
 
                 <button class="remove-btn text-red-500" data-id="${item.id}">حذف</button>
             </div>
+
         `).join('');
 
-        const total = cart.reduce((s, item) => s + item.price * item.quantity, 0);
+        // -------------------
+        // محاسبه مجموع صحیح
+        // -------------------
+        const total = cart.reduce((sum, item) => {
+            const price = item.discountPercent > 0 ? item.finalPrice : item.price;
+            return sum + price * item.quantity;
+        }, 0);
+
         cartTotal.textContent = `${total.toLocaleString()} تومان`;
     }
 
@@ -1807,7 +1835,6 @@ function viewProduct(id) {
 }
 
 
-
 // لیست آدرس تصاویر را اینجا ذخیره می‌کنیم
 window.currentGalleryImages = [];
 
@@ -1972,6 +1999,33 @@ document.addEventListener('click', function (event) {
         if (mobileSuggestions) mobileSuggestions.classList.remove('active');
     }
 });
+function closeProductModal() {
+    // بستن مودال محصول
+    const productModal = document.getElementById('productModal');
+    if (productModal) productModal.classList.remove('active');
+
+    // بستن مودال سبد خرید
+    const cartModal = document.getElementById('cartModal');
+    if (cartModal) cartModal.classList.remove('active');
+    // بستن مودال‌ها با دکمه ESC
+document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") {
+
+        // اگر مودال محصول باز است
+        const productModal = document.getElementById("productModal");
+        if (productModal && productModal.classList.contains("active")) {
+            closeProductModal();
+        }
+
+        // اگر مودال سبد خرید باز است
+        const cartModal = document.getElementById("cartModal");
+        if (cartModal && cartModal.classList.contains("active")) {
+            closeCart();
+        }
+    }
+});
+}
+
 
 
 
