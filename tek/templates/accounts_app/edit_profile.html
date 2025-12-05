@@ -1,0 +1,63 @@
+{% extends "maintemplate.html" %}
+{% load static %}
+{% block content %}
+
+<section class="my-12 flex justify-center">
+  <div class="w-full max-w-lg bg-white p-8 rounded-2xl shadow-lg border">
+    <h1 class="text-2xl font-bold mb-6 text-center">ویرایش پروفایل</h1>
+
+    <form id="ProfileUpdateForm" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="mb-3">{{ form.name.label_tag }} {{ form.name }}</div>
+      <div class="mb-3">{{ form.family.label_tag }} {{ form.family }}</div>
+      <div class="mb-3">{{ form.email.label_tag }} {{ form.email }}</div>
+      <div class="mb-3">{{ form.mobile_number.label_tag }} {{ form.mobile_number }}</div>
+      <div class="mb-3">{{ form.national_code.label_tag }} {{ form.national_code }}</div>
+      <div class="mb-3">{{ form.birth_date.label_tag }} {{ form.birth_date }}</div>
+      <div class="mb-3">{{ form.address.label_tag }} {{ form.address }}</div>
+      <div class="mb-3">{{ form.iamge_name.label_tag }} {{ form.iamge_name }}</div>
+      <div class="mb-3">{{ form.refund_method.label_tag }} {{ form.refund_method }}</div>
+
+      <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">
+        ذخیره تغییرات
+      </button>
+    </form>
+  </div>
+</section>
+
+<script>
+  const profileRedirectURL = "{% url 'accounts:profile' %}";
+
+  function showNotification(type, message) {
+    const color = type === "success" ? "bg-green-500" : "bg-red-500";
+    const el = document.createElement("div");
+    el.className = `fixed top-5 right-5 px-4 py-2 text-white rounded shadow-lg ${color}`;
+    el.textContent = message;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 3000);
+  }
+
+  document.addEventListener("DOMContentLoaded", function() {
+    const form = document.getElementById("ProfileUpdateForm");
+    form.addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const formData = new FormData(form);
+
+      const response = await fetch("", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        showNotification("success", data.message);
+        setTimeout(() => window.location.href = profileRedirectURL, 1500);
+      } else {
+        showNotification("error", "خطا در ذخیره اطلاعات");
+        console.error(data.errors);
+      }
+    });
+  });
+</script>
+
+{% endblock %}

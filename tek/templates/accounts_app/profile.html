@@ -1,0 +1,170 @@
+{% extends "maintemplate.html" %}
+{% load static %}
+{% block content %}
+<div>
+    <div class="container mx-auto px-4 py-16">
+
+        <!-- Header -->
+        <div class="flex items-center gap-4 mb-8">
+            <div class="w-16 h-16 bg-gradient-to-r from-[#008B8B] to-[#006666] rounded-2xl flex items-center justify-center text-white text-2xl font-bold">
+                ک
+            </div>
+            <div>
+                <h2 class="text-4xl font-bold dark:text-white">پروفایل کاربری</h2>
+                <p class="text-gray-600 dark:text-gray-400" id="userWelcome">خوش آمدید!</p>
+            </div>
+        </div>
+
+        <div class="grid lg:grid-cols-3 gap-8">
+            <!-- Main content -->
+            <div class="lg:col-span-2 space-y-8">
+
+                <!-- Purchase History -->
+                <div class="form-glass p-6 rounded-2xl">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-2xl font-bold dark:text-white flex items-center gap-3">
+                            <span class="text-3xl">🛍️</span> تاریخچه خریدها
+                        </h3>
+                        <span class="bg-[#008B8B] text-white px-3 py-1 rounded-full text-sm font-bold" id="purchaseCount">0 خرید</span>
+                    </div>
+                    <div id="userPurchases" class="space-y-4"></div>
+                </div>
+
+                <!-- Addresses -->
+                <div class="form-glass p-6 rounded-2xl">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-2xl font-bold dark:text-white flex items-center gap-3">
+                            <span class="text-3xl">📍</span> آدرس‌های من
+                        </h3>
+                        <button onclick="addAddress()" class="btn-primary btn-modern px-4 py-2 rounded-xl text-sm font-medium">افزودن آدرس</button>
+                    </div>
+                    <div id="userAddresses" class="space-y-4"></div>
+                </div>
+            </div>
+            <!-- Current Cart -->
+                    <div class="form-glass p-6 rounded-2xl">
+                        <h3 class="text-xl font-bold mb-4 dark:text-white flex items-center gap-3"><span
+                                class="text-2xl">🛒</span> سبد خرید فعلی</h3>
+                        <div id="profileCart" class="space-y-4"></div>
+                    </div>
+            <!-- Sidebar -->
+            <div class="space-y-8">
+
+                <!-- Profile Card -->
+                <div x-data="{ openProfileModal: false }" class="space-y-8">
+
+                    <div class="form-glass p-6 rounded-2xl">
+                        <h3 class="text-xl font-bold mb-4 dark:text-white flex items-center gap-3">
+                            <span class="text-2xl">👤</span> پروفایل کاربری
+                        </h3>
+
+                        <div class="space-y-4">
+                            <div class="flex justify-between"><span class="text-gray-600">نام:</span><span id="showName" class="font-bold">{{ user_data.name }}</span></div>
+                            <div class="flex justify-between"><span class="text-gray-600">نام خانوادگی:</span><span id="showFamily" class="font-bold">{{ user_data.family }}</span></div>
+                            <div class="flex justify-between"><span class="text-gray-600">ایمیل:</span><span id="showEmail" class="font-bold">{{ user_data.email }}</span></div>
+                            <div class="flex justify-between"><span class="text-gray-600">شماره موبایل:</span><span id="showMobile" class="font-bold">{{ user_data.mobile_number }}</span></div>
+                            <div class="flex justify-between"><span class="text-gray-600">کد ملی:</span><span id="showNational" class="font-bold">{{ customer_data.national_code }}</span></div>
+                            <div class="flex justify-between"><span class="text-gray-600">تاریخ تولد:</span><span id="showBirth" class="font-bold">{{ customer_data.birth_date }}</span></div>
+                        </div>
+
+                        <div class="mt-6 text-center">
+                            <button @click="openProfileModal = true" class="px-4 py-2 bg-blue-600 text-white rounded-lg">ویرایش پروفایل</button>
+                        </div>
+                    </div>
+
+                    <!-- Edit Modal -->
+                    <div x-show="openProfileModal" x-cloak class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50" x-transition.opacity>
+                        <div class="bg-white dark:bg-gray-900 w-full max-w-lg p-6 rounded-2xl shadow-xl relative" x-transition.scale>
+                            <button @click="openProfileModal = false" class="absolute top-2 right-3 text-gray-500 text-xl font-bold">✖</button>
+                            <h2 class="text-2xl font-bold mb-4 text-center dark:text-white">ویرایش پروفایل</h2>
+
+                            <form id="profileForm" method="POST">
+                                {% csrf_token %}
+                                <div>
+                                    <label class="block mb-1">نام</label>
+                                    <input type="text" name="name" id="profileName" value="{{ user_data.name }}" class="w-full p-2 border rounded-lg">
+                                </div>
+                                <div>
+                                    <label class="block mb-1">نام خانوادگی</label>
+                                    <input type="text" name="family" id="profileFamily" value="{{ user_data.family }}" class="w-full p-2 border rounded-lg">
+                                </div>
+                                <div>
+                                    <label class="block mb-1">ایمیل</label>
+                                    <input type="email" name="email" id="profileEmail" value="{{ user_data.email }}" class="w-full p-2 border rounded-lg">
+                                </div>
+                                <div>
+                                    <label class="block mb-1">کد ملی</label>
+                                    <input type="text" name="national_code" id="profileNationalCode" value="{{ customer_data.national_code }}" class="w-full p-2 border rounded-lg">
+                                </div>
+                                <div>
+                                    <label class="block mb-1">تاریخ تولد</label>
+                                    <input type="date" name="birth_date" id="profileBirthDate" value="{{ customer_data.birth_date }}" class="w-full p-2 border rounded-lg">
+                                </div>
+                                <div class="flex justify-between mt-4">
+                                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">ذخیره تغییرات</button>
+                                    <button type="button" @click="openProfileModal = false" class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400">لغو</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+                    <div class="form-glass p-6 rounded-2xl">
+                        <h3 class="text-xl font-bold mb-4 dark:text-white flex items-center gap-3"><span
+                                class="text-2xl">📊</span> آمار خرید</h3>
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center"><span
+                                    class="text-gray-600 dark:text-gray-400">کل خریدها:</span> <span
+                                    class="font-bold dark:text-white" id="totalPurchases">0</span>
+                            </div>
+                            <div class="flex justify-between items-center"><span
+                                    class="text-gray-600 dark:text-gray-400">کل مبلغ:</span> <span
+                                    class="font-bold text-[#008B8B]" id="totalSpent">0 تومان</span>
+                            </div>
+                            <div class="flex justify-between items-center"><span
+                                    class="text-gray-600 dark:text-gray-400">آخرین خرید:</span> <span
+                                    class="font-bold dark:text-white" id="lastPurchase">-</span>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/alpinejs" defer></script>
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+    // فقط برای آپدیت بعد از submit، چون مقادیر اولیه از context لود شده
+    document.getElementById("profileForm").addEventListener("submit", async function(e){
+        e.preventDefault();
+        const formData = new FormData(this);
+
+        const res = await fetch("accounts/profile/update/api/", {
+            method: "POST",
+            body: formData,
+            headers: { "X-Requested-With": "XMLHttpRequest" },
+            credentials: "include"
+        });
+
+        const data = await res.json();
+
+        if(data.success){
+            showNotification(data.message || "پروفایل ذخیره شد!");
+
+            document.getElementById("showName").textContent = data.user.name;
+            document.getElementById("showFamily").textContent = data.user.family;
+            document.getElementById("showEmail").textContent = data.user.email;
+            document.getElementById("showNational").textContent = data.user.national_code;
+            document.getElementById("showBirth").textContent = data.user.birth_date || "-";
+
+            const modal = document.querySelector("[x-data]");
+            if(modal && modal.__x) modal.__x.$data.openProfileModal = false;
+        } else {
+            showNotification(data.message || "خطا در ذخیره پروفایل!");
+        }
+    });
+});    
+
+</script>
+{% endblock %}

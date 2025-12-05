@@ -1,0 +1,60 @@
+{% extends "maintemplate.html" %}
+{% load static %}
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <h2 class="text-3xl font-bold mb-6 text-gray-900 dark:text-white">لوازم جانبی</h2>
+    
+    <div id="accessoriesList" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
+</div>
+
+<script>
+async function fetchAccessories() {
+    try {
+        const response = await fetch("http://127.0.0.1:8000/products/products/?category=accessories");
+        return await response.json();
+    } catch (error) {
+        console.error("❌ خطا در دریافت لوازم جانبی:", error);
+        return [];
+    }
+}
+
+function renderProductSection(elementId, productList) {
+    const container = document.getElementById(elementId);
+    if (!container) return;
+
+    let cardClass = 'bg-gradient-to-br from-green-50 to-teal-50 dark:from-green-900/20 dark:to-teal-900/20 border-green-200 dark:border-green-700/50';
+    let priceColor = 'text-green-600 dark:text-green-400';
+    let buttonClass = 'bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white';
+    let hoverEffect = 'hover:shadow-xl hover:shadow-green-500/30 hover:scale-105';
+
+    container.innerHTML = productList.map(product => `
+        <div class="product-card ${cardClass} rounded-xl shadow-lg overflow-hidden border transition-all duration-300 ${hoverEffect}">
+            <div class="relative">
+                <img src="${product.main_image}" class="w-full h-48 object-cover">
+            </div>
+
+            <div class="p-5">
+                <h4 class="font-bold mb-3 text-lg dark:text-white">${product.name}</h4>
+
+                <span class="${priceColor} font-bold text-xl">${product.originalPrice} تومان</span>
+
+                <div class="flex gap-2 mt-4">
+                    <button onclick="viewProduct('${product.id}')" class="flex-1 bg-gray-100 dark:bg-gray-700 px-3 py-2 rounded-lg">
+                        مشاهده
+                    </button>
+                    <button onclick="addToCart('${product.id}')" class="flex-1 ${buttonClass} px-3 py-2 rounded-lg">
+                        افزودن
+                    </button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+async function initPage() {
+    const products = await fetchAccessories();
+    renderProductSection("accessoriesList", products);
+}
+initPage();
+</script>
+{% endblock %}

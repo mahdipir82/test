@@ -1,0 +1,80 @@
+{% extends "maintemplate.html" %}
+{% load static %}
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <h2 class="text-3xl font-bold mb-6 text-gray-900 dark:text-white">لپتاپ ها</h2>
+
+    <div id="laptopsList" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
+</div>
+
+<script>
+// 🟦 درخواست گرفتن فقط لپتاپ‌ها از API
+async function fetchLaptops() {
+    try {
+        const response = await fetch("http://127.0.0.1:8000/products/products/");
+        return await response.json();
+    } catch (error) {
+        console.error("❌ خطا در دریافت محصولات:", error);
+        return [];
+    }
+}
+
+// 🟩 تابع رندر کارت محصولات (کپی همان تابع اصلی)
+function renderProductSection(elementId, productList) {
+    const container = document.getElementById(elementId);
+    if (!container) return;
+
+    // رنگ‌های مخصوص فقط لپتاپ‌ها
+    let cardClass = 'bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-blue-200 dark:border-blue-700/50';
+    let priceColor = 'text-blue-600 dark:text-blue-400';
+    let buttonClass = 'bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white';
+    let hoverEffect = 'hover:shadow-xl hover:shadow-blue-500/30 hover:scale-105';
+
+    container.innerHTML = productList.map(product => {
+        const hasDiscount = product.discount && product.discount > 0;
+        const isLowStock = product.stock_quantity && product.stock_quantity < 5;
+        const isOutOfStock = !product.stock_quantity || product.stock_quantity <= 0;
+
+        return `
+        <div class="product-card ${cardClass} rounded-xl shadow-lg overflow-hidden border transition-all duration-300 ${hoverEffect}">
+          <div class="relative">
+            <img src="${product.main_image}" alt="${product.name}" class="w-full h-48 object-cover">
+            
+            ${hasDiscount ? '<span class="absolute top-3 left-3 bg-gradient-to-r from-red-500 to-pink-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">تخفیف ویژه</span>' : ''}
+            ${isLowStock ? '<span class="absolute top-3 left-3 bg-gradient-to-r from-orange-500 to-red-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">موجودی محدود</span>' : ''}
+            ${isOutOfStock ? '<span class="absolute top-3 left-3 bg-gray-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">ناموجود</span>' : ''}
+          </div>
+
+          <div class="p-5">
+            <h4 class="font-bold mb-3 text-lg dark:text-white line-clamp-2">${product.name}</h4>
+
+            <div class="flex items-center gap-2 mb-4">
+              ${hasDiscount ? `<span class="text-gray-400 line-through text-sm">${product.originalPrice.toLocaleString()} تومان</span>` : ''}
+              <span class="${priceColor} font-bold text-xl">${(hasDiscount ? product.finalPrice : product.originalPrice).toLocaleString()} تومان</span>
+            </div>
+
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">موجودی: ${product.stock_quantity || 0} عدد</p>
+
+            <div class="flex gap-2">
+              <button onclick="viewProduct('${product.id}')" class="flex-1 bg-white/70 dark:bg-gray-700/70 hover:bg-white dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 px-3 py-2 rounded-lg transition-all duration-300 text-sm font-medium backdrop-blur-sm" ${isOutOfStock ? 'disabled' : ''}>
+                مشاهده
+              </button>
+              <button onclick="addToCart('${product.id}')" class="flex-1 ${buttonClass} px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 shadow-md hover:shadow-lg" ${isOutOfStock ? 'disabled opacity-50 cursor-not-allowed' : ''}>
+                افزودن
+              </button>
+            </div>
+          </div>
+        </div>
+        `;
+    }).join('');
+}
+
+// 🚀 اجرای صفحه لپتاپ‌ها
+async function initLaptopPage() {
+    const products = await fetchLaptops();
+    renderProductSection("laptopsList", products);
+}
+
+initLaptopPage();
+</script>
+{% endblock  %}

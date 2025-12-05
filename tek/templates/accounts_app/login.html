@@ -1,0 +1,180 @@
+<!-- ======================== AUTH MODAL ======================== -->
+<div id="authModal" class="fixed inset-0 bg-black/60 hidden z-50 flex items-center justify-center">
+  <div class="w-full max-w-md">
+    <div class="bg-white rounded-2xl shadow-lg border p-8 relative form-glass">
+
+      <!-- Close Button -->
+      <button onclick="closeAuthModal()" class="absolute top-3 left-3 text-gray-500 hover:text-gray-700 text-xl">✕</button>
+
+      <!-- Header -->
+      <div class="flex justify-center items-center mb-8 gap-3">
+        <div class="w-10 h-10 bg-gradient-to-r from-[#008B8B] to-[#006666] rounded-xl flex items-center justify-center">
+          <span class="text-white font-bold text-lg">M</span>
+        </div>
+        <h3 class="text-2xl font-bold text-gray-800" id="authTitle">ورود به حساب</h3>
+      </div>
+
+      <!-- Forms Wrapper -->
+      <form id="authForm" class="space-y-6" onsubmit="handleAuth(event)">
+        {% csrf_token %}
+
+        <!-- Login Fields -->
+        <div id="loginFields" class="hidden">
+          <label for="mobile_number_login" class="block text-gray-600">شماره موبایل:</label>
+          <input type="text" id="mobile_number_login" name="mobile_number_login" class="input-glass w-full px-4 py-3 rounded-xl focus:outline-none dark:text-white dark:placeholder-gray-400" placeholder="موبایل را وارد کنید" required>
+
+          <label for="password_login" class="block text-gray-600">رمز عبور:</label>
+          <input type="password" id="password_login" name="password_login" class="input-glass w-full px-4 py-3 rounded-xl focus:outline-none dark:text-white dark:placeholder-gray-400" placeholder="رمز عبور را وارد کنید" required>
+
+          <div class="flex items-center justify-between text-sm">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" class="rounded border-gray-300 text-[#008B8B] focus:ring-[#008B8B]">
+              <span class="text-gray-600">مرا به خاطر بسپار</span>
+            </label>
+            <a onclick="toggleAuthMode1(event)" class="text-[#008B8B] hover:underline">فراموشی رمز عبور؟</a>
+          </div>
+        </div>
+
+        <!-- Register Fields -->
+        <div id="registerFields" class="hidden">
+          <label for="mobile_number_register" class="block text-gray-600">شماره موبایل:</label>
+          <input type="text" id="mobile_number_register" name="mobile_number_register" class="input-glass w-full px-4 py-3 rounded-xl focus:outline-none dark:text-white dark:placeholder-gray-400" placeholder="موبایل را وارد کنید" required>
+
+          <label for="password1_register" class="block text-gray-600">رمز عبور:</label>
+          <input type="password" id="password1_register" name="password1_register" class="input-glass w-full px-4 py-3 rounded-xl focus:outline-none dark:text-white dark:placeholder-gray-400" placeholder="رمز عبور" required>
+
+          <label for="password2_register" class="block text-gray-600">تکرار رمز عبور:</label>
+          <input type="password" id="password2_register" name="password2_register" class="input-glass w-full px-4 py-3 rounded-xl focus:outline-none dark:text-white dark:placeholder-gray-400" placeholder="تکرار رمز عبور" required>
+
+          <div class="flex items-center">
+            <input type="checkbox" name="remember_me_register" class="rounded border-gray-300 text-[#008B8B] focus:ring-[#008B8B]" />
+            <span class="text-sm text-gray-600">
+              با
+              <a href="#" class="text-blue-600 hover:text-blue-800">قوانین و مقررات</a>
+              موافقم
+            </span>
+          </div>
+        </div>
+
+        <!-- Verify Fields -->
+        <div id="verifyFields" class="hidden">
+            <label for="active_code" class="block text-gray-600">کد فعال سازی:</label>
+            <input type="text" id="active_code" name="active_code" class="input-glass w-full px-4 py-3 rounded-xl focus:outline-none dark:text-white dark:placeholder-gray-400" placeholder="کد دریافتی را وارد کنید" required>
+            <div style="margin-top: 10px;">
+                <button type="button" id="resend-btn" class="submit-btn">ارسال کد مجدد</button>
+                <span id="timer" style="margin-right:10px;color:red;"></span>
+            </div>
+        </div>
+
+        <!-- Remember Password Fields -->
+        <div id="rememberFields" class="hidden">
+            <label for="mobile_number_remember" class="block text-gray-600">شماره موبایل:</label>
+            <input type="text" id="mobile_number_remember" name="mobile_number_remember" class="input-glass w-full px-4 py-3 rounded-xl focus:outline-none dark:text-white dark:placeholder-gray-400" placeholder="موبایل را وارد کنید" required>
+        </div>
+
+        <!-- Change Password Fields -->
+        <div id="changeFields" class="hidden">
+            <label for="password1_change" class="block text-gray-600">رمز عبور جدید:</label>
+            <input type="password" id="password1_change" name="password1_change" class="input-glass w-full px-4 py-3 rounded-xl focus:outline-none dark:text-white dark:placeholder-gray-400" placeholder="رمز عبور جدید" required>
+            <label for="password2_change" class="block text-gray-600">تکرار رمز عبور جدید:</label>
+            <input type="password" id="password2_change" name="password2_change" class="input-glass w-full px-4 py-3 rounded-xl focus:outline-none dark:text-white dark:placeholder-gray-400" placeholder="تکرار رمز عبور جدید" required>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" id="authSubmitBtn" class="btn-primary btn-modern w-full py-4 rounded-xl text-lg font-bold flex items-center justify-center gap-2">
+          ورود
+        </button>
+      </form>
+
+      <!-- Footer -->
+      <div class="mt-6 text-center">
+        <p class="text-gray-600 mb-2" id="authFooterText">حساب کاربری ندارید؟</p>
+        <button id="authToggleBtn" onclick="toggleAuthMode(event)" class="text-blue-600 hover:text-blue-800 font-semibold">
+          ثبت نام کنید
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const btn = document.getElementById("resend-btn");
+    const timer = document.getElementById("timer");
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                cookie = cookie.trim();
+                if (cookie.startsWith(name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function startTimer(seconds) {
+        let remaining = seconds;
+        timer.innerText = `ارسال مجدد در ${remaining} ثانیه`;
+        const interval = setInterval(() => {
+            remaining--;
+            if (remaining > 0) {
+                timer.innerText = `ارسال مجدد در ${remaining} ثانیه`;
+            } else {
+                clearInterval(interval);
+                timer.innerText = "";
+                btn.disabled = false;
+            }
+        }, 1000);
+    }
+
+    if (btn) {
+        btn.addEventListener("click", async () => {
+            btn.disabled = true;
+            timer.innerText = "در حال ارسال...";
+            
+            const csrfToken = getCookie("csrftoken");
+            if (!csrfToken) {
+                showNotification("CSRF token یافت نشد. صفحه را رفرش کنید.");
+                btn.disabled = false;
+                timer.innerText = "";
+                return;
+            }
+
+            try {
+                const resp = await fetch("{% url 'accounts:resend_code' %}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": csrfToken
+                    },
+                    credentials: "same-origin"
+                });
+
+                const data = await resp.json();
+
+                if (data.status === "sent") {
+                    startTimer(data.cooldown);
+                    showNotification(data.message);
+                } else if (data.status === "cooldown") {
+                    startTimer(data.remaining);
+                    showNotification(data.message);
+                } else {
+                    showNotification(data.message);
+                    btn.disabled = false;
+                    timer.innerText = "";
+                }
+            } catch (err) {
+                console.error(err);
+                showNotification("خطا در ارسال کد!");
+                btn.disabled = false;
+                timer.innerText = "";
+            }
+        });
+    }
+});
+</script>

@@ -1,0 +1,98 @@
+{% load static %}
+<!-- Header -->
+    <header class="glass sticky top-0 z-50 transition-colors">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-8">
+                    <h1 class="text-2xl font-bold text-[#008B8B] cursor-pointer" onclick="navigateTo('home')"><span
+                            class="bg-gradient-to-r from-[#008B8B] to-[#006666] bg-clip-text text-transparent">تک‌استور</span>
+                    </h1>
+                    <nav class="hidden lg:flex gap-6"><a href="{% url 'main:index' %}" onclick="navigateTo('home')"
+                            class="nav-link hover:text-[#008B8B] transition dark:text-gray-300 font-medium">خانه</a>
+                        <div class="dropdown relative"><a href="#"
+                                class="nav-link hover:text-[#008B8B] transition dark:text-gray-300 font-medium flex items-center gap-1">
+                                محصولات
+                                <svg class="w-4 h-4 transition-transform" fill="none" stroke="currentColor"
+                                    viewbox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 9l-7 7-7-7" />
+                                </svg></a>
+                            <div class="dropdown-menu p-2"><a href="{% url 'products:laptops_page' %}" 
+                                    class="block px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-gray-300 rounded-lg transition-all duration-200 flex items-center gap-3">
+                                    <span class="text-2xl">💻</span>
+                                    <div>
+                                        <div class="font-medium">
+                                            لپ‌تاپ
+                                        </div>
+                                        <div class="text-xs text-gray-500">
+                                            انواع لپ‌تاپ گیمینگ و اداری
+                                        </div>
+                                    </div>
+                                </a> <a href="{% url 'products:computers_page' %}"
+                                    class="block px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-gray-300 rounded-lg transition-all duration-200 flex items-center gap-3">
+                                    <span class="text-2xl">🖥️</span>
+                                    <div>
+                                        <div class="font-medium">
+                                            کامپیوتر
+                                        </div>
+                                        <div class="text-xs text-gray-500">
+                                            سیستم‌های قدرتمند
+                                        </div>
+                                    </div>
+                                </a> <a href="{% url 'products:accessories_page' %}"
+                                    class="block px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-gray-300 rounded-lg transition-all duration-200 flex items-center gap-3">
+                                    <span class="text-2xl">⌨️</span>
+                                    <div>
+                                        <div class="font-medium">
+                                            لوازم جانبی
+                                        </div>
+                                        <div class="text-xs text-gray-500">
+                                            ماوس، کیبورد و هدست
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                        </div><a href="#" onclick="navigateTo('blog')"
+                            class="nav-link hover:text-[#008B8B] transition dark:text-gray-300 font-medium">بلاگ</a> <a
+                            href="#" onclick="navigateTo('about')"
+                            class="nav-link hover:text-[#008B8B] transition dark:text-gray-300 font-medium">درباره
+                            ما</a>
+                    </nav>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="search-container relative hidden md:block"><input type="text" id="searchInput"
+                            placeholder="جستجو در محصولات..."
+                            class="input-glass px-4 py-2 pr-10 rounded-xl focus:outline-none text-sm w-64 dark:text-white dark:placeholder-gray-400"
+                            oninput="handleSearch(this.value)">
+                        <svg class="w-5 h-5 absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                            fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        <div class="search-suggestions" id="searchSuggestions"></div>
+                    </div><button onclick="toggleDarkMode()"
+                        class="glass p-2 hover:bg-white/20 rounded-xl transition-all duration-300" id="darkModeToggle">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                        </svg></button> <button onclick="openCart()"
+                        class="glass relative p-2 hover:bg-white/20 rounded-xl transition-all duration-300">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg><span class="cart-badge" id="cartBadge">0</span> </button><button
+                        onclick="openAuthModal('login')"
+                        class="btn-primary btn-modern px-4 py-2 rounded-xl text-sm font-medium hidden md:block"
+                        id="authButton">ورود / ثبت‌نام</button>
+                        <!-- Mobile Menu Button -->
+                        <button
+                        onclick="toggleMobileMenu()"
+                        class="lg:hidden glass p-2 hover:bg-white/20 rounded-xl transition-all duration-300">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 6h16M4 12h16M4 18h16" />
+                        </svg></button>
+                </div>
+            </div>
+        </div>
+    </header>
