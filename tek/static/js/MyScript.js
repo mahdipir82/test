@@ -718,153 +718,153 @@ function checkout() {
     openPaymentModal();
 }
 
-function openPaymentModal() {
-    const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    document.getElementById('paymentTotal').textContent = `${total.toLocaleString()} تومان`;
-    document.getElementById('paymentModal').classList.add('active');
-}
+// function openPaymentModal() {
+//     const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+//     document.getElementById('paymentTotal').textContent = `${total.toLocaleString()} تومان`;
+//     document.getElementById('paymentModal').classList.add('active');
+// }
 
-function closePaymentModal() {
-    document.getElementById('paymentModal').classList.remove('active');
-}
+// function closePaymentModal() {
+//     document.getElementById('paymentModal').classList.remove('active');
+// }
 
-function processPayment(method) {
-    showNotification('در حال انتقال به درگاه پرداخت...', 'info');
-    closePaymentModal();
+// function processPayment(method) {
+//     showNotification('در حال انتقال به درگاه پرداخت...', 'info');
+//     closePaymentModal();
 
-    // Create payment gateway simulation
-    const paymentGateway = document.createElement('div');
-    paymentGateway.className = 'modal active';
-    paymentGateway.innerHTML = `
-        <div class="modal-content p-0 w-full max-w-lg">
-          <div class="form-glass p-8 rounded-2xl">
-            <div class="text-center mb-8">
-              <div class="w-20 h-20 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                </svg>
-              </div>
-              <h3 class="text-2xl font-bold dark:text-white mb-2">درگاه پرداخت امن</h3>
-              <p class="text-gray-600 dark:text-gray-400">پرداخت با ${method}</p>
-            </div>
+//     // Create payment gateway simulation
+//     const paymentGateway = document.createElement('div');
+//     paymentGateway.className = 'modal active';
+//     paymentGateway.innerHTML = `
+//         <div class="modal-content p-0 w-full max-w-lg">
+//           <div class="form-glass p-8 rounded-2xl">
+//             <div class="text-center mb-8">
+//               <div class="w-20 h-20 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center mx-auto mb-4">
+//                 <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+//                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+//                 </svg>
+//               </div>
+//               <h3 class="text-2xl font-bold dark:text-white mb-2">درگاه پرداخت امن</h3>
+//               <p class="text-gray-600 dark:text-gray-400">پرداخت با ${method}</p>
+//             </div>
             
-            <div class="bg-gradient-to-r from-[#008B8B]/10 to-[#006666]/10 p-4 rounded-xl mb-6 border border-[#008B8B]/20">
-              <div class="flex justify-between items-center mb-2">
-                <span class="font-medium dark:text-white">مبلغ قابل پرداخت:</span>
-                <span class="text-xl font-bold text-[#008B8B]" id="gatewayTotal">0 تومان</span>
-              </div>
-              <div class="text-sm text-gray-600 dark:text-gray-400">
-                شماره پیگیری: ${Math.random().toString(36).substr(2, 9).toUpperCase()}
-              </div>
-            </div>
+//             <div class="bg-gradient-to-r from-[#008B8B]/10 to-[#006666]/10 p-4 rounded-xl mb-6 border border-[#008B8B]/20">
+//               <div class="flex justify-between items-center mb-2">
+//                 <span class="font-medium dark:text-white">مبلغ قابل پرداخت:</span>
+//                 <span class="text-xl font-bold text-[#008B8B]" id="gatewayTotal">0 تومان</span>
+//               </div>
+//               <div class="text-sm text-gray-600 dark:text-gray-400">
+//                 شماره پیگیری: ${Math.random().toString(36).substr(2, 9).toUpperCase()}
+//               </div>
+//             </div>
             
-            ${method === 'کارت بانکی' ? `
-              <form onsubmit="completePayment(event, '${method}')" class="space-y-4">
-                <div>
-                  <label class="block font-bold mb-2 dark:text-white">شماره کارت</label>
-                  <input type="text" required class="input-glass w-full px-4 py-3 rounded-xl focus:outline-none dark:text-white" placeholder="1234-5678-9012-3456" maxlength="19" oninput="formatCardNumber(this)">
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                  <div>
-                    <label class="block font-bold mb-2 dark:text-white">تاریخ انقضا</label>
-                    <input type="text" required class="input-glass w-full px-4 py-3 rounded-xl focus:outline-none dark:text-white" placeholder="MM/YY" maxlength="5" oninput="formatExpiry(this)">
-                  </div>
-                  <div>
-                    <label class="block font-bold mb-2 dark:text-white">CVV2</label>
-                    <input type="password" required class="input-glass w-full px-4 py-3 rounded-xl focus:outline-none dark:text-white" placeholder="123" maxlength="4">
-                  </div>
-                </div>
-                <div>
-                  <label class="block font-bold mb-2 dark:text-white">رمز دوم (اختیاری)</label>
-                  <input type="password" class="input-glass w-full px-4 py-3 rounded-xl focus:outline-none dark:text-white" placeholder="رمز دوم کارت">
-                </div>
-                <button type="submit" class="btn-primary btn-modern w-full py-4 rounded-xl text-lg font-bold">پرداخت</button>
-              </form>
-            ` : method === 'کیف پول دیجیتال' ? `
-              <div class="space-y-4">
-                <div class="text-center">
-                  <div class="w-32 h-32 mx-auto mb-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center">
-                    <svg class="w-16 h-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
-                    </svg>
-                  </div>
-                  <p class="text-gray-600 dark:text-gray-400 mb-4">لطفاً اپلیکیشن کیف پول خود را باز کرده و QR کد زیر را اسکن کنید</p>
-                  <div class="w-40 h-40 mx-auto bg-white p-4 rounded-xl border-2 border-gray-200">
-                    <div class="w-full h-full bg-gray-100 rounded-lg flex items-center justify-center">
-                      <span class="text-gray-500 text-sm">QR Code</span>
-                    </div>
-                  </div>
-                </div>
-                <button onclick="completePayment(event, '${method}')" class="btn-primary btn-modern w-full py-4 rounded-xl text-lg font-bold">تأیید پرداخت</button>
-              </div>
-            ` : method === 'اقساط' ? `
-              <div class="space-y-4">
-                <div class="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-xl border border-yellow-200 dark:border-yellow-700">
-                  <h4 class="font-bold text-yellow-800 dark:text-yellow-200 mb-2">شرایط خرید اقساطی</h4>
-                  <ul class="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
-                    <li>• حداقل مبلغ خرید: 10 میلیون تومان</li>
-                    <li>• تعداد اقساط: 3، 6، 9، 12 ماه</li>
-                    <li>• کارمزد: 2% ماهانه</li>
-                    <li>• نیاز به ضامن معتبر</li>
-                  </ul>
-                </div>
-                <form onsubmit="completePayment(event, '${method}')" class="space-y-4">
-                  <div>
-                    <label class="block font-bold mb-2 dark:text-white">تعداد اقساط</label>
-                    <select required class="input-glass w-full px-4 py-3 rounded-xl focus:outline-none dark:text-white">
-                      <option value="">انتخاب کنید</option>
-                      <option value="3">3 قسط (کارمزد 6%)</option>
-                      <option value="6">6 قسط (کارمزد 12%)</option>
-                      <option value="9">9 قسط (کارمزد 18%)</option>
-                      <option value="12">12 قسط (کارمزد 24%)</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label class="block font-bold mb-2 dark:text-white">کد ملی</label>
-                    <input type="text" required class="input-glass w-full px-4 py-3 rounded-xl focus:outline-none dark:text-white" placeholder="کد ملی 10 رقمی" maxlength="10">
-                  </div>
-                  <button type="submit" class="btn-primary btn-modern w-full py-4 rounded-xl text-lg font-bold">ادامه فرآیند</button>
-                </form>
-              </div>
-            ` : `
-              <div class="space-y-4">
-                <div class="bg-green-50 dark:bg-green-900/20 p-4 rounded-xl border border-green-200 dark:border-green-700">
-                  <h4 class="font-bold text-green-800 dark:text-green-200 mb-2">پرداخت در محل تحویل</h4>
-                  <p class="text-sm text-green-700 dark:text-green-300">سفارش شما ثبت شده و هنگام تحویل پرداخت خواهید کرد.</p>
-                </div>
-                <div>
-                  <label class="block font-bold mb-2 dark:text-white">آدرس تحویل</label>
-                  <select required class="input-glass w-full px-4 py-3 rounded-xl focus:outline-none dark:text-white">
-                    <option value="">انتخاب آدرس</option>
-                    ${currentUser && currentUser.addresses ? currentUser.addresses.map(addr => `<option value="${addr}">${addr}</option>`).join('') : '<option value="آدرس پیش‌فرض">آدرس پیش‌فرض</option>'}
-                  </select>
-                </div>
-                <div>
-                  <label class="block font-bold mb-2 dark:text-white">زمان تحویل ترجیحی</label>
-                  <select required class="input-glass w-full px-4 py-3 rounded-xl focus:outline-none dark:text-white">
-                    <option value="">انتخاب کنید</option>
-                    <option value="صبح">صبح (9-12)</option>
-                    <option value="عصر">عصر (14-17)</option>
-                    <option value="شب">شب (18-21)</option>
-                  </select>
-                </div>
-                <button onclick="completePayment(event, '${method}')" class="btn-primary btn-modern w-full py-4 rounded-xl text-lg font-bold">ثبت سفارش</button>
-              </div>
-            `}
+//             ${method === 'کارت بانکی' ? `
+//               <form onsubmit="completePayment(event, '${method}')" class="space-y-4">
+//                 <div>
+//                   <label class="block font-bold mb-2 dark:text-white">شماره کارت</label>
+//                   <input type="text" required class="input-glass w-full px-4 py-3 rounded-xl focus:outline-none dark:text-white" placeholder="1234-5678-9012-3456" maxlength="19" oninput="formatCardNumber(this)">
+//                 </div>
+//                 <div class="grid grid-cols-2 gap-4">
+//                   <div>
+//                     <label class="block font-bold mb-2 dark:text-white">تاریخ انقضا</label>
+//                     <input type="text" required class="input-glass w-full px-4 py-3 rounded-xl focus:outline-none dark:text-white" placeholder="MM/YY" maxlength="5" oninput="formatExpiry(this)">
+//                   </div>
+//                   <div>
+//                     <label class="block font-bold mb-2 dark:text-white">CVV2</label>
+//                     <input type="password" required class="input-glass w-full px-4 py-3 rounded-xl focus:outline-none dark:text-white" placeholder="123" maxlength="4">
+//                   </div>
+//                 </div>
+//                 <div>
+//                   <label class="block font-bold mb-2 dark:text-white">رمز دوم (اختیاری)</label>
+//                   <input type="password" class="input-glass w-full px-4 py-3 rounded-xl focus:outline-none dark:text-white" placeholder="رمز دوم کارت">
+//                 </div>
+//                 <button type="submit" class="btn-primary btn-modern w-full py-4 rounded-xl text-lg font-bold">پرداخت</button>
+//               </form>
+//             ` : method === 'کیف پول دیجیتال' ? `
+//               <div class="space-y-4">
+//                 <div class="text-center">
+//                   <div class="w-32 h-32 mx-auto mb-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center">
+//                     <svg class="w-16 h-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+//                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+//                     </svg>
+//                   </div>
+//                   <p class="text-gray-600 dark:text-gray-400 mb-4">لطفاً اپلیکیشن کیف پول خود را باز کرده و QR کد زیر را اسکن کنید</p>
+//                   <div class="w-40 h-40 mx-auto bg-white p-4 rounded-xl border-2 border-gray-200">
+//                     <div class="w-full h-full bg-gray-100 rounded-lg flex items-center justify-center">
+//                       <span class="text-gray-500 text-sm">QR Code</span>
+//                     </div>
+//                   </div>
+//                 </div>
+//                 <button onclick="completePayment(event, '${method}')" class="btn-primary btn-modern w-full py-4 rounded-xl text-lg font-bold">تأیید پرداخت</button>
+//               </div>
+//             ` : method === 'اقساط' ? `
+//               <div class="space-y-4">
+//                 <div class="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-xl border border-yellow-200 dark:border-yellow-700">
+//                   <h4 class="font-bold text-yellow-800 dark:text-yellow-200 mb-2">شرایط خرید اقساطی</h4>
+//                   <ul class="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
+//                     <li>• حداقل مبلغ خرید: 10 میلیون تومان</li>
+//                     <li>• تعداد اقساط: 3، 6، 9، 12 ماه</li>
+//                     <li>• کارمزد: 2% ماهانه</li>
+//                     <li>• نیاز به ضامن معتبر</li>
+//                   </ul>
+//                 </div>
+//                 <form onsubmit="completePayment(event, '${method}')" class="space-y-4">
+//                   <div>
+//                     <label class="block font-bold mb-2 dark:text-white">تعداد اقساط</label>
+//                     <select required class="input-glass w-full px-4 py-3 rounded-xl focus:outline-none dark:text-white">
+//                       <option value="">انتخاب کنید</option>
+//                       <option value="3">3 قسط (کارمزد 6%)</option>
+//                       <option value="6">6 قسط (کارمزد 12%)</option>
+//                       <option value="9">9 قسط (کارمزد 18%)</option>
+//                       <option value="12">12 قسط (کارمزد 24%)</option>
+//                     </select>
+//                   </div>
+//                   <div>
+//                     <label class="block font-bold mb-2 dark:text-white">کد ملی</label>
+//                     <input type="text" required class="input-glass w-full px-4 py-3 rounded-xl focus:outline-none dark:text-white" placeholder="کد ملی 10 رقمی" maxlength="10">
+//                   </div>
+//                   <button type="submit" class="btn-primary btn-modern w-full py-4 rounded-xl text-lg font-bold">ادامه فرآیند</button>
+//                 </form>
+//               </div>
+//             ` : `
+//               <div class="space-y-4">
+//                 <div class="bg-green-50 dark:bg-green-900/20 p-4 rounded-xl border border-green-200 dark:border-green-700">
+//                   <h4 class="font-bold text-green-800 dark:text-green-200 mb-2">پرداخت در محل تحویل</h4>
+//                   <p class="text-sm text-green-700 dark:text-green-300">سفارش شما ثبت شده و هنگام تحویل پرداخت خواهید کرد.</p>
+//                 </div>
+//                 <div>
+//                   <label class="block font-bold mb-2 dark:text-white">آدرس تحویل</label>
+//                   <select required class="input-glass w-full px-4 py-3 rounded-xl focus:outline-none dark:text-white">
+//                     <option value="">انتخاب آدرس</option>
+//                     ${currentUser && currentUser.addresses ? currentUser.addresses.map(addr => `<option value="${addr}">${addr}</option>`).join('') : '<option value="آدرس پیش‌فرض">آدرس پیش‌فرض</option>'}
+//                   </select>
+//                 </div>
+//                 <div>
+//                   <label class="block font-bold mb-2 dark:text-white">زمان تحویل ترجیحی</label>
+//                   <select required class="input-glass w-full px-4 py-3 rounded-xl focus:outline-none dark:text-white">
+//                     <option value="">انتخاب کنید</option>
+//                     <option value="صبح">صبح (9-12)</option>
+//                     <option value="عصر">عصر (14-17)</option>
+//                     <option value="شب">شب (18-21)</option>
+//                   </select>
+//                 </div>
+//                 <button onclick="completePayment(event, '${method}')" class="btn-primary btn-modern w-full py-4 rounded-xl text-lg font-bold">ثبت سفارش</button>
+//               </div>
+//             `}
             
-            <div class="flex justify-center mt-6">
-              <button onclick="cancelPayment()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-sm">انصراف از پرداخت</button>
-            </div>
-          </div>
-        </div>
-      `;
+//             <div class="flex justify-center mt-6">
+//               <button onclick="cancelPayment()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-sm">انصراف از پرداخت</button>
+//             </div>
+//           </div>
+//         </div>
+//       `;
 
-    document.body.appendChild(paymentGateway);
+//     document.body.appendChild(paymentGateway);
 
-    // Set total amount
-    const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    document.getElementById('gatewayTotal').textContent = `${total.toLocaleString()} تومان`;
-}
+//     // Set total amount
+//     const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+//     document.getElementById('gatewayTotal').textContent = `${total.toLocaleString()} تومان`;
+// }
 
 function formatCardNumber(input) {
     let value = input.value.replace(/\D/g, '');
@@ -943,129 +943,81 @@ window.addEventListener('popstate', function (event) {
 // window.addEventListener('load', function () {
 //     history.replaceState({ page: 'home' }, '', '/');
 // });
-
-
+//======================================================================
+const iranProvinces = {
+    "تهران": ["تهران", "ری", "اسلامشهر", "شمیرانات", "پردیس", "ورامین"],
+    "اصفهان": ["اصفهان", "نجف‌آباد", "کاشان", "خمینی‌شهر", "شاهین‌شهر"],
+    "خراسان رضوی": ["مشهد", "نیشابور", "سبزوار", "تربت جام"],
+    "فارس": ["شیراز", "مرودشت", "کازرون", "داراب"],
+    "آذربایجان شرقی": ["تبریز", "مراغه", "مرند"]
+};
 function renderProfile() {
-    if (!currentUser) {
-        hideLoading(); // اضافه کردن hideLoading در صورت عدم وجود کاربر
-        navigateTo('home');
-        return;
+    if (!currentUser) return;
+
+    /** 🟦 خوش‌آمدگویی **/
+    const userWelcome = document.getElementById("userWelcome");
+    if (userWelcome) userWelcome.textContent = `خوش آمدید، ${currentUser.name}`;
+
+    /** 🟦 تاریخچه خرید **/
+    const purchaseCount = currentUser.purchases?.length || 0;
+    document.getElementById("purchaseCount").textContent = `${purchaseCount} خرید`;
+
+    const purchasesContainer = document.getElementById("userPurchases");
+    if (purchaseCount === 0) {
+        purchasesContainer.innerHTML = `
+            <div class="text-center py-6">
+                <p class="text-gray-500">هنوز خریدی انجام نشده</p>
+            </div>`;
+    } else {
+        purchasesContainer.innerHTML = currentUser.purchases.map(p => `
+            <div class="form-glass p-4 rounded-xl flex gap-4">
+                <img src="${p.image}" class="w-16 h-16 rounded object-cover">
+                <div class="flex-1">
+                    <h4 class="font-bold">${p.name}</h4>
+                    <p class="text-sm text-gray-600">تعداد: ${p.quantity}</p>
+                    <p class="text-sm text-gray-600">تاریخ: ${p.purchaseDate}</p>
+                    <p class="text-[#008B8B] font-bold">${(p.quantity * p.price).toLocaleString()} تومان</p>
+                </div>
+            </div>
+        `).join("");
     }
 
-    try {
-        // Update user welcome message
-        const userWelcomeElement = document.getElementById('userWelcome');
-        if (userWelcomeElement) {
-            userWelcomeElement.textContent = `خوش آمدید، ${currentUser.name}!`;
-        }
+    /** 🟦 آدرس‌ها **/
+    const addrContainer = document.getElementById("userAddresses");
+    addrContainer.innerHTML = (currentUser.addresses || []).map((a, i) => `
+        <div class="form-glass p-4 rounded-xl flex justify-between items-center">
+            <span>${a}</span>
+            <button class="text-red-500" onclick="removeAddress(${i})">حذف</button>
+        </div>
+    `).join("");
 
-        // Update purchase count
-        const purchaseCount = currentUser.purchases ? currentUser.purchases.length : 0;
-        const purchaseCountElement = document.getElementById('purchaseCount');
-        if (purchaseCountElement) {
-            purchaseCountElement.textContent = `${purchaseCount} خرید`;
-        }
+    /** 🟦 سبد خرید فعلی **/
+    const profileCart = document.getElementById("profileCart");
 
-        // Render purchases
-        const purchasesContainer = document.getElementById('userPurchases');
-        if (purchasesContainer) {
-            if (!currentUser.purchases || currentUser.purchases.length === 0) {
-                purchasesContainer.innerHTML = `
-              <div class="text-center py-8">
-                <div class="text-6xl mb-4">🛍️</div>
-                <p class="text-gray-500 dark:text-gray-400 text-lg">هنوز خریدی انجام نداده‌اید</p>
-                <button onclick="navigateTo('home')" class="btn-primary btn-modern mt-4 px-6 py-2 rounded-xl">شروع خرید</button>
-              </div>
-            `;
-            } else {
-                purchasesContainer.innerHTML = currentUser.purchases.map(purchase => `
-              <div class="form-glass p-4 rounded-xl border border-gray-200 dark:border-gray-600">
-                <div class="flex items-center gap-4">
-                  <img src="${purchase.image}" alt="${purchase.name}" class="w-16 h-16 rounded-lg object-cover">
-                  <div class="flex-1">
-                    <h4 class="font-bold dark:text-white">${purchase.name}</h4>
-                    <div class="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mt-1">
-                      <span>تعداد: ${purchase.quantity}</span>
-                      <span>تاریخ: ${purchase.purchaseDate}</span>
-                      <span>روش پرداخت: ${purchase.paymentMethod}</span>
-                    </div>
-                    <div class="flex items-center justify-between mt-2">
-                      <span class="text-[#008B8B] font-bold">${(purchase.price * purchase.quantity).toLocaleString()} تومان</span>
-                      <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">${purchase.status}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            `).join('');
-            }
-        }
-
-        // Render addresses
-        const addressesContainer = document.getElementById('userAddresses');
-        if (addressesContainer && currentUser.addresses) {
-            addressesContainer.innerHTML = currentUser.addresses.map((addr, index) => `
-            <div class="form-glass p-4 rounded-xl border border-gray-200 dark:border-gray-600 flex items-center justify-between">
-              <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-[#008B8B] rounded-xl flex items-center justify-center text-white">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                  </svg>
-                </div>
-                <span class="dark:text-white">${addr}</span>
-              </div>
-              <button onclick="removeAddress(${index})" class="text-red-500 hover:text-red-700 p-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                </svg>
-              </button>
+    if (cart.length === 0) {
+        profileCart.innerHTML = `
+            <div class="text-center py-6">
+                <p class="text-gray-500">سبد خرید خالی است</p>
             </div>
-          `).join('');
-        }
-
-        // Render current cart
-        const profileCart = document.getElementById('profileCart');
-        if (profileCart) {
-            if (cart.length === 0) {
-                profileCart.innerHTML = `
-              <div class="text-center py-6">
-                <div class="text-4xl mb-3">🛒</div>
-                <p class="text-gray-500 dark:text-gray-400">سبد خرید خالی است</p>
-              </div>
-            `;
-            } else {
-                profileCart.innerHTML = cart.map(item => `
-              <div class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <img src="${item.image}" alt="${item.name}" class="w-12 h-12 rounded-lg object-cover">
-                <div class="flex-1">
-                  <p class="font-medium text-sm dark:text-white">${item.name}</p>
-                  <p class="text-xs text-gray-600 dark:text-gray-400">تعداد: ${item.quantity}</p>
+        `;
+    } else {
+        profileCart.innerHTML =
+            cart.map(item => `
+                <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    <img src="${item.image}" class="w-14 h-14 rounded object-cover">
+                    <div class="flex-1">
+                        <p class="font-medium">${item.name}</p>
+                        <p class="text-xs text-gray-500">تعداد: ${item.quantity}</p>
+                    </div>
                 </div>
-              </div>
-            `).join('') + `
-              <button onclick="openCart()" class="btn-primary btn-modern w-full py-2 rounded-xl mt-3 text-sm">مشاهده سبد خرید</button>
-            `;
-            }
-        }
+            `).join("") +
+            `
+            <button onclick="openCart()" 
+            class="btn-primary btn-modern w-full mt-3 py-2 rounded-xl">مشاهده سبد خرید</button>
 
-        // Update stats
-        const totalPurchases = currentUser.purchases ? currentUser.purchases.length : 0;
-        const totalSpent = currentUser.purchases ? currentUser.purchases.reduce((sum, p) => sum + (p.price * p.quantity), 0) : 0;
-        const lastPurchase = currentUser.purchases && currentUser.purchases.length > 0
-            ? currentUser.purchases[currentUser.purchases.length - 1].purchaseDate
-            : '-';
-
-        const totalPurchasesElement = document.getElementById('totalPurchases');
-        const totalSpentElement = document.getElementById('totalSpent');
-        const lastPurchaseElement = document.getElementById('lastPurchase');
-
-        if (totalPurchasesElement) totalPurchasesElement.textContent = totalPurchases;
-        if (totalSpentElement) totalSpentElement.textContent = `${totalSpent.toLocaleString()} تومان`;
-        if (lastPurchaseElement) lastPurchaseElement.textContent = lastPurchase;
-
-    } catch (error) {
-        console.error('خطا در رندر پروفایل:', error);
-        showNotification('خطا در بارگذاری پروفایل', 'error');
+            <button onclick="finalizeOrder()" 
+            class="bg-green-600 text-white w-full mt-3 py-2 rounded-xl">نهایی کردن سفارش</button>
+        `;
     }
 }
 
