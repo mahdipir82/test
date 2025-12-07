@@ -135,17 +135,7 @@ const blogPosts = [
 // Sample Products Data
 
 
-// دریافت محصولات از API
-async function fetchProducts() {
-    try {
-        const response = await fetch('/products/api/list/');
-        const data = await response.json();
-        return data; // آرایه‌ای از محصولات جنگو
-    } catch (error) {
-        console.error("خطا در دریافت محصولات:", error);
-        return [];
-    }
-}
+
 
 // تفکیک محصولات بر اساس دسته‌ها و ویژگی‌ها
 // 📦 دریافت محصولات از API
@@ -701,6 +691,7 @@ function updateCartQuantity(id, change) {
     saveCart();
     updateCartBadge();
     openCart();
+    
 }
 
 // ==========================
@@ -736,14 +727,20 @@ function applyDiscount() {
 }
 
 function checkout() {
-    if (!currentUser) {
-        closeCart();
-        openAuthModal('login');
-        showNotification('لطفا ابتدا وارد حساب کاربری خود شوید', 'error');
+    if (cart.length === 0) {
+        showNotification('سبد خرید شما خالی است!', 'error');
         return;
     }
 
-    openPaymentModal();
+    if (!currentUser) {
+        closeCart();
+        openAuthModal('login');
+        showNotification('برای تکمیل خرید ابتدا وارد شوید', 'error');
+        return;
+    }
+
+    // بدون navigateTo → مستقیم کاربر را به پروفایل می‌بریم
+    window.location.href = "/accounts/profile/";
 }
 
 // function openPaymentModal() {
@@ -908,64 +905,64 @@ function formatExpiry(input) {
     input.value = value;
 }
 
-function completePayment(e, method) {
-    e.preventDefault();
+// function completePayment(e, method) {
+//     e.preventDefault();
 
-    showNotification('در حال پردازش پرداخت...', 'info');
+//     showNotification('در حال پردازش پرداخت...', 'info');
 
-    setTimeout(() => {
-        // Simulate payment processing
-        const success = Math.random() > 0.1; // 90% success rate
+//     setTimeout(() => {
+//         // Simulate payment processing
+//         const success = Math.random() > 0.1; // 90% success rate
 
-        if (success) {
-            // Add purchases to user profile
-            const purchaseDate = new Date().toLocaleDateString('fa-IR');
-            const purchaseItems = cart.map(item => ({
-                ...item,
-                purchaseDate,
-                paymentMethod: method,
-                status: 'پرداخت شده',
-                trackingCode: Math.random().toString(36).substr(2, 9).toUpperCase()
-            }));
+//         if (success) {
+//             // Add purchases to user profile
+//             const purchaseDate = new Date().toLocaleDateString('fa-IR');
+//             const purchaseItems = cart.map(item => ({
+//                 ...item,
+//                 purchaseDate,
+//                 paymentMethod: method,
+//                 status: 'پرداخت شده',
+//                 trackingCode: Math.random().toString(36).substr(2, 9).toUpperCase()
+//             }));
 
-            if (currentUser) {
-                currentUser.purchases = [...(currentUser.purchases || []), ...purchaseItems];
-            }
+//             if (currentUser) {
+//                 currentUser.purchases = [...(currentUser.purchases || []), ...purchaseItems];
+//             }
 
-            showNotification(`پرداخت با ${method} موفقیت‌آمیز بود! کد پیگیری: ${purchaseItems[0].trackingCode}`, 'success');
-            cart = [];
-            updateCartBadge();
-            closeCart();
-            cancelPayment();
+//             showNotification(`پرداخت با ${method} موفقیت‌آمیز بود! کد پیگیری: ${purchaseItems[0].trackingCode}`, 'success');
+//             cart = [];
+//             updateCartBadge();
+//             closeCart();
+//             cancelPayment();
+            
+//             // Update profile if currently viewing
+//             if (currentPage === 'profile') {
+//                 renderProfile();
+//             }
+//         } else {
+//             showNotification('پرداخت ناموفق بود. لطفاً دوباره تلاش کنید.', 'error');
+//         }
+//     }, 3000);
+// }
 
-            // Update profile if currently viewing
-            if (currentPage === 'profile') {
-                renderProfile();
-            }
-        } else {
-            showNotification('پرداخت ناموفق بود. لطفاً دوباره تلاش کنید.', 'error');
-        }
-    }, 3000);
-}
-
-function cancelPayment() {
-    const modal = document.querySelector('.modal:last-child');
-    if (modal) {
-        modal.remove();
-    }
-}
+// function cancelPayment() {
+//     const modal = document.querySelector('.modal:last-child');
+//     if (modal) {
+//         modal.remove();
+//     }
+// }
 
 
 
 // Handle browser back/forward buttons
-window.addEventListener('popstate', function (event) {
-    if (event.state && event.state.page) {
-        navigateTo(event.state.page, false);
-    } else {
-        // Default to home if no state
-        navigateTo('home', false);
-    }
-});
+// window.addEventListener('popstate', function (event) {
+//     if (event.state && event.state.page) {
+//         navigateTo(event.state.page, false);
+//     } else {
+//         // Default to home if no state
+//         navigateTo('home', false);
+//     }
+// });
 
 // // Set initial history state
 // window.addEventListener('load', function () {
@@ -980,75 +977,106 @@ const iranProvinces = {
     "آذربایجان شرقی": ["تبریز", "مراغه", "مرند"]
 };
 function renderProfile() {
-    if (!currentUser) return;
 
-    /** 🟦 خوش‌آمدگویی **/
-    const userWelcome = document.getElementById("userWelcome");
-    if (userWelcome) userWelcome.textContent = `خوش آمدید، ${currentUser.name}`;
+    /* ==========================================================
+       1) نمایش سبد خرید فعلی
+    ========================================================== */
+    const profileCart = document.getElementById("profileCart");
 
-    /** 🟦 تاریخچه خرید **/
-    const purchaseCount = currentUser.purchases?.length || 0;
-    document.getElementById("purchaseCount").textContent = `${purchaseCount} خرید`;
-
-    const purchasesContainer = document.getElementById("userPurchases");
-    if (purchaseCount === 0) {
-        purchasesContainer.innerHTML = `
-            <div class="text-center py-6">
-                <p class="text-gray-500">هنوز خریدی انجام نشده</p>
-            </div>`;
-    } else {
-        purchasesContainer.innerHTML = currentUser.purchases.map(p => `
-            <div class="form-glass p-4 rounded-xl flex gap-4">
-                <img src="${p.image}" class="w-16 h-16 rounded object-cover">
-                <div class="flex-1">
-                    <h4 class="font-bold">${p.name}</h4>
-                    <p class="text-sm text-gray-600">تعداد: ${p.quantity}</p>
-                    <p class="text-sm text-gray-600">تاریخ: ${p.purchaseDate}</p>
-                    <p class="text-[#008B8B] font-bold">${(p.quantity * p.price).toLocaleString()} تومان</p>
+    if (profileCart) {
+        if (!cart || cart.length === 0) {
+            profileCart.innerHTML = `
+                <div class="text-center py-6">
+                    <p class="text-gray-500 dark:text-gray-300">سبد خرید فعلی خالی است</p>
                 </div>
+            `;
+        } else {
+            profileCart.innerHTML = cart.map(item => `
+                <div class="flex items-center justify-between bg-gray-100 dark:bg-gray-800 p-3 rounded-xl">
+                    <div>
+                        <p class="font-bold">${item.title}</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">${item.price.toLocaleString()} تومان</p>
+                    </div>
+                </div>
+            `).join("") + `
+                <button onclick="finalizeOrder()"
+                    class="btn-primary w-full mt-4 py-3 rounded-xl">
+                    ثبت سفارش نهایی
+                </button>
+            `;
+        }
+    }
+
+
+    /* ==========================================================
+       2) نمایش لیست خریدهای قبلی
+    ========================================================== */
+    const userPurchases = document.getElementById("userPurchases");
+    const purchaseCountElement = document.getElementById("purchaseCount");
+
+    if (userPurchases && purchaseCountElement) {
+        if (!currentUser || !currentUser.purchases || currentUser.purchases.length === 0) {
+            purchaseCountElement.textContent = "0 خرید";
+            userPurchases.innerHTML = `
+                <p class="text-gray-500 dark:text-gray-300">هنوز هیچ خریدی ثبت نشده است.</p>
+            `;
+        } else {
+            purchaseCountElement.textContent = `${currentUser.purchases.length} خرید`;
+
+            userPurchases.innerHTML = currentUser.purchases.map(p => `
+                <div class="bg-gray-100 dark:bg-gray-800 p-4 rounded-xl">
+                    <p class="font-bold">${p.title || "خرید"}</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">تاریخ: ${p.purchaseDate}</p>
+                    <p class="font-bold text-[#008B8B]">${p.price.toLocaleString()} تومان</p>
+                </div>
+            `).join("");
+        }
+    }
+
+
+    /* ==========================================================
+       3) نمایش آدرس‌ها (بدون return ⚠️)
+    ========================================================== */
+    const userAddresses = document.getElementById("userAddresses");
+
+    if (userAddresses) {
+    if (!currentUser || !currentUser.addresses || currentUser.addresses.length === 0) {
+        userAddresses.innerHTML = `
+            <p class="text-gray-500 dark:text-gray-300">هیچ آدرسی ثبت نشده است.</p>
+        `;
+    } else {
+        userAddresses.innerHTML = currentUser.addresses.map(addr => `
+            <div class="bg-gray-100 dark:bg-gray-800 p-3 rounded-xl">
+                <p class="font-bold">${addr.title ?? "عنوان ندارد"}</p>
+                <p class="text-sm">${addr.full ?? JSON.stringify(addr)}</p>
             </div>
         `).join("");
     }
-
-    /** 🟦 آدرس‌ها **/
-    const addrContainer = document.getElementById("userAddresses");
-    addrContainer.innerHTML = (currentUser.addresses || []).map((a, i) => `
-        <div class="form-glass p-4 rounded-xl flex justify-between items-center">
-            <span>${a}</span>
-            <button class="text-red-500" onclick="removeAddress(${i})">حذف</button>
-        </div>
-    `).join("");
-
-    /** 🟦 سبد خرید فعلی **/
-    const profileCart = document.getElementById("profileCart");
-
-    if (cart.length === 0) {
-        profileCart.innerHTML = `
-            <div class="text-center py-6">
-                <p class="text-gray-500">سبد خرید خالی است</p>
-            </div>
-        `;
-    } else {
-        profileCart.innerHTML =
-            cart.map(item => `
-                <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                    <img src="${item.image}" class="w-14 h-14 rounded object-cover">
-                    <div class="flex-1">
-                        <p class="font-medium">${item.name}</p>
-                        <p class="text-xs text-gray-500">تعداد: ${item.quantity}</p>
-                    </div>
-                </div>
-            `).join("") +
-            `
-            <button onclick="openCart()" 
-            class="btn-primary btn-modern w-full mt-3 py-2 rounded-xl">مشاهده سبد خرید</button>
-
-            <button onclick="finalizeOrder()" 
-            class="bg-green-600 text-white w-full mt-3 py-2 rounded-xl">نهایی کردن سفارش</button>
-        `;
-    }
 }
 
+
+    /* ==========================================================
+       4) نمایش آمار خرید
+    ========================================================== */
+    const totalPurchases = document.getElementById("totalPurchases");
+    const totalSpent = document.getElementById("totalSpent");
+    const lastPurchase = document.getElementById("lastPurchase");
+
+    if (currentUser && currentUser.purchases && currentUser.purchases.length > 0) {
+        const purchases = currentUser.purchases;
+
+        totalPurchases.textContent = purchases.length;
+
+        const total = purchases.reduce((sum, p) => sum + (p.price || 0), 0);
+        totalSpent.textContent = `${total.toLocaleString()} تومان`;
+
+        lastPurchase.textContent = purchases[purchases.length - 1].purchaseDate;
+    } else {
+        totalPurchases.textContent = "0";
+        totalSpent.textContent = "0 تومان";
+        lastPurchase.textContent = "-";
+    }
+}
 function removeAddress(index) {
     currentUser.addresses.splice(index, 1);
     renderProfile();
