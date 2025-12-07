@@ -38,9 +38,22 @@
                         </h3>
                         <button onclick="addAddress()" class="btn-primary btn-modern px-4 py-2 rounded-xl text-sm font-medium">افزودن آدرس</button>
                     </div>
-                    <div id="userAddresses" class="space-y-4"></div>
+<div id="userAddresses" class="space-y-4">
+    {% if user_addresses %}
+        {% for address in user_addresses %}
+            <div class="bg-gray-100 dark:bg-gray-800 p-3 rounded-xl">
+                <p class="font-bold">{{ address.title }}</p>
+                <p class="text-sm">{{ address.full_address }}</p>
+                <p class="text-sm">{{ address.city }}, {{ address.province }} - کد پستی: {{ address.postal_code }}</p>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p class="text-gray-500 dark:text-gray-300">هیچ آدرسی ثبت نشده است.</p>
+    {% endif %}
+</div>
                 </div>
             </div>
+            
             <!-- Current Cart -->
                    <div class="form-glass p-6 rounded-2xl">
     <h3 class="text-xl font-bold mb-4 dark:text-white flex items-center gap-3">

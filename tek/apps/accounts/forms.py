@@ -173,13 +173,11 @@ class ProfileUpdateForm(forms.ModelForm):
         fields = [
             'national_code',
             'birth_date',
-            'address',
             'refund_method',
         ]
         widgets = {
             'national_code': forms.TextInput(attrs={"class": "form-input", "placeholder": "کد ملی"}),
             'birth_date': forms.DateInput(attrs={"type": "date", "class": "form-input"}),
-            'address': forms.Textarea(attrs={"class": "form-input", "rows": 3, "placeholder": "آدرس"}),
             'refund_method': forms.TextInput(attrs={"class": "form-input", "placeholder": "روش بازگرداندن پول"}),
         }
 

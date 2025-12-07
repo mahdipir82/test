@@ -66,7 +66,6 @@ class Customer(models.Model):
     phone_number = models.CharField(max_length=11, null=True, blank=True)
     national_code = models.CharField(max_length=10, blank=True, null=True, verbose_name="کد ملی")
     birth_date = models.DateField(blank=True, null=True, verbose_name="تاریخ تولد")
-    address = models.TextField(blank=True, null=True, verbose_name="آدرس")
     refund_method = models.CharField(
         max_length=100,
         blank=True,
@@ -82,3 +81,13 @@ class Customer(models.Model):
 #====================================================
 
 
+class Address(models.Model):
+    customer = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="addresses")
+    title = models.CharField(max_length=255)
+    province = models.CharField(max_length=100)
+    city = models.CharField(max_length=100)
+    full_address = models.TextField()
+    postal_code = models.CharField(max_length=10)
+
+    def __str__(self):
+        return f"{self.title} - {self.city}, {self.province}"

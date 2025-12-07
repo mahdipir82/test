@@ -480,3 +480,48 @@ class UpdateProfileAPI(View):
                 "birth_date": customer.birth_date,
             }
         })
+        
+        
+
+# views.py
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from .models import Address
+
+@login_required
+def get_addresses(request):
+    user = request.user  # گرفتن کاربر وارد شده
+    addresses = Address.objects.filter(customer=user)  # گرفتن آدرس‌ها برای کاربر
+    address_list = []
+
+    for address in addresses:
+        address_list.append({
+            'title': address.title,
+            'province': address.province,
+            'city': address.city,
+            'full_address': address.full_address,
+            'postal_code': address.postal_code,
+        })
+
+    return JsonResponse({'addresses': address_list})
+
+@login_required
+def add_address(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)  # داده‌های ارسال شده از سمت فرانت‌اند
+        title = data.get('title')
+        province = data.get('province')
+        city = data.get('city')
+        full_address = data.get('full_address')
+        postal_code = data.get('postal_code')
+
+        user = request.user
+        new_address = Address.objects.create(
+            customer=user,
+            title=title,
+            province=province,
+            city=city,
+            full_address=full_address,
+            postal_code=postal_code
+        )
+        return JsonResponse({'success': True, 'message': 'آدرس با موفقیت اضافه شد!'})

@@ -26,6 +26,8 @@ urlpatterns=[
     path('profile/', ProfileView.as_view(), name='profile'),
     path('profile/api/', ProfileAPI.as_view(), name='profile_api'),
     path('profile/update/api/', UpdateProfileAPI.as_view(), name='update_profile_api'),
+    path('add_address/', views.add_address, name='add_address'),
+    path('get_addresses/', views.get_addresses, name='get_addresses'),
     # path('edit_profile/', EditProfileView.as_view(), name='edit_profile'),
 
     ]

@@ -86,7 +86,7 @@ WSGI_APPLICATION = 'tek.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'mysql.connector.django',
-        'NAME': 'tek_shop',
+        'NAME': 'tek',
         'USER': 'root',
         'PASSWORD': '80540019',
         'HOST': 'localhost',

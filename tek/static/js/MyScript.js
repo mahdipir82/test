@@ -977,12 +977,30 @@ const iranProvinces = {
     "آذربایجان شرقی": ["تبریز", "مراغه", "مرند"]
 };
 function renderProfile() {
+    const userAddresses = document.getElementById("userAddresses");
+
+    if (userAddresses) {
+        // خواندن آدرس‌ها از localStorage
+        const addresses = JSON.parse(localStorage.getItem('userAddresses')) || [];
+
+        // اگر آدرس‌ها وجود دارند، آن‌ها را نمایش می‌دهیم
+        if (addresses.length > 0) {
+            userAddresses.innerHTML = addresses.map(addr => `
+                <div class="bg-gray-100 dark:bg-gray-800 p-3 rounded-xl">
+                    <p class="font-bold">${addr.title || "عنوان ندارد"}</p>
+                    <p class="text-sm">${addr.full_address || "آدرس کامل ندارد"}</p>
+                    <p class="text-sm">${addr.city}, ${addr.province} - کد پستی: ${addr.postal_code}</p>
+                </div>
+            `).join("");
+        } else {
+            userAddresses.innerHTML = `<p class="text-gray-500 dark:text-gray-300">هیچ آدرسی ثبت نشده است.</p>`;
+        }
+    }
 
     /* ==========================================================
        1) نمایش سبد خرید فعلی
     ========================================================== */
     const profileCart = document.getElementById("profileCart");
-
     if (profileCart) {
         if (!cart || cart.length === 0) {
             profileCart.innerHTML = `
@@ -1006,7 +1024,6 @@ function renderProfile() {
             `;
         }
     }
-
 
     /* ==========================================================
        2) نمایش لیست خریدهای قبلی
@@ -1033,30 +1050,8 @@ function renderProfile() {
         }
     }
 
-
     /* ==========================================================
-       3) نمایش آدرس‌ها (بدون return ⚠️)
-    ========================================================== */
-    const userAddresses = document.getElementById("userAddresses");
-
-    if (userAddresses) {
-    if (!currentUser || !currentUser.addresses || currentUser.addresses.length === 0) {
-        userAddresses.innerHTML = `
-            <p class="text-gray-500 dark:text-gray-300">هیچ آدرسی ثبت نشده است.</p>
-        `;
-    } else {
-        userAddresses.innerHTML = currentUser.addresses.map(addr => `
-            <div class="bg-gray-100 dark:bg-gray-800 p-3 rounded-xl">
-                <p class="font-bold">${addr.title ?? "عنوان ندارد"}</p>
-                <p class="text-sm">${addr.full ?? JSON.stringify(addr)}</p>
-            </div>
-        `).join("");
-    }
-}
-
-
-    /* ==========================================================
-       4) نمایش آمار خرید
+       3) نمایش آمار خرید
     ========================================================== */
     const totalPurchases = document.getElementById("totalPurchases");
     const totalSpent = document.getElementById("totalSpent");
@@ -1077,10 +1072,61 @@ function renderProfile() {
         lastPurchase.textContent = "-";
     }
 }
-function removeAddress(index) {
-    currentUser.addresses.splice(index, 1);
-    renderProfile();
-    showNotification('آدرس حذف شد', 'success');
+
+function submitAddress(e) {
+    e.preventDefault();
+
+    const title = document.getElementById('addressTitle').value;
+    const province = document.getElementById('addressProvince').value;
+    const city = document.getElementById('addressCity').value;
+    const fullAddress = document.getElementById('addressFull').value;
+    const postal = document.getElementById('addressPostal').value;
+
+    const newAddress = {
+        title: title,
+        province: province,
+        city: city,
+        full_address: fullAddress,
+        postal_code: postal
+    };
+
+    // ارسال آدرس به سرور
+    fetch('/accounts/add_address/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken()  // توکن CSRF
+        },
+        body: JSON.stringify(newAddress)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('آدرس با موفقیت اضافه شد!', 'success');
+            
+            // به روز رسانی آدرس‌ها در localStorage
+            let addresses = JSON.parse(localStorage.getItem('userAddresses')) || [];
+            addresses.push(newAddress);
+            localStorage.setItem('userAddresses', JSON.stringify(addresses));
+            
+            renderProfile();  // به‌روزرسانی پروفایل
+        } else {
+            showNotification(data.message || 'خطا در ارسال درخواست', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('خطا:', error);
+        showNotification('خطا در ارسال درخواست', 'error');
+    });
+}
+
+function saveAddressesToLocalStorage(addresses) {
+    localStorage.setItem('userAddresses', JSON.stringify(addresses));
+}
+
+function getAddressesFromLocalStorage() {
+    const addresses = localStorage.getItem('userAddresses');
+    return addresses ? JSON.parse(addresses) : [];
 }
 
 function addAddress() {
@@ -1147,6 +1193,11 @@ function closeAddressModal() {
     }
 }
 
+function getCsrfToken() {
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    return csrfToken;
+}
+
 function submitAddress(e) {
     e.preventDefault();
 
@@ -1156,16 +1207,40 @@ function submitAddress(e) {
     const fullAddress = document.getElementById('addressFull').value;
     const postal = document.getElementById('addressPostal').value;
 
-    const newAddress = `${title} - ${province}، ${city}، ${fullAddress}، کد پستی: ${postal}`;
+    const newAddress = {
+        title: title,
+        province: province,
+        city: city,
+        full_address: fullAddress,
+        postal_code: postal
+    };
 
-    if (!currentUser.addresses) {
-        currentUser.addresses = [];
-    }
-
-    currentUser.addresses.push(newAddress);
-    renderProfile();
-    closeAddressModal();
-    showNotification('آدرس جدید با موفقیت اضافه شد!', 'success');
+    // ارسال آدرس به سرور
+    fetch('/accounts/add_address/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken()  // توکن CSRF
+        },
+        body: JSON.stringify(newAddress)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('آدرس با موفقیت اضافه شد!', 'success');
+            // پس از اضافه کردن آدرس، آدرس جدید را در localStorage ذخیره می‌کنیم
+            const addresses = JSON.parse(localStorage.getItem('userAddresses')) || [];
+            addresses.push(newAddress);
+            localStorage.setItem('userAddresses', JSON.stringify(addresses));
+            renderProfile();  // به‌روزرسانی پروفایل
+        } else {
+            showNotification(data.message || 'خطا در ارسال درخواست', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('خطا:', error);
+        showNotification('خطا در ارسال درخواست', 'error');
+    });
 }
 
 
