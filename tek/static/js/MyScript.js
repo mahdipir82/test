@@ -977,14 +977,14 @@ const iranProvinces = {
     "آذربایجان شرقی": ["تبریز", "مراغه", "مرند"]
 };
 function renderProfile() {
-    const userAddresses = document.getElementById("userAddresses");
+     const userAddresses = document.getElementById("userAddresses");
+
+    // خواندن آدرس‌ها از localStorage
+    const addresses = JSON.parse(localStorage.getItem('userAddresses')) || [];
 
     if (userAddresses) {
-        // خواندن آدرس‌ها از localStorage
-        const addresses = JSON.parse(localStorage.getItem('userAddresses')) || [];
-
-        // اگر آدرس‌ها وجود دارند، آن‌ها را نمایش می‌دهیم
         if (addresses.length > 0) {
+            // نمایش آدرس‌ها از localStorage
             userAddresses.innerHTML = addresses.map(addr => `
                 <div class="bg-gray-100 dark:bg-gray-800 p-3 rounded-xl">
                     <p class="font-bold">${addr.title || "عنوان ندارد"}</p>
@@ -1000,7 +1000,7 @@ function renderProfile() {
     /* ==========================================================
        1) نمایش سبد خرید فعلی
     ========================================================== */
-    const profileCart = document.getElementById("profileCart");
+   const profileCart = document.getElementById("profileCart");
     if (profileCart) {
         if (!cart || cart.length === 0) {
             profileCart.innerHTML = `
@@ -1024,6 +1024,7 @@ function renderProfile() {
             `;
         }
     }
+
 
     /* ==========================================================
        2) نمایش لیست خریدهای قبلی
@@ -1103,13 +1104,9 @@ function submitAddress(e) {
     .then(data => {
         if (data.success) {
             showNotification('آدرس با موفقیت اضافه شد!', 'success');
-            
-            // به روز رسانی آدرس‌ها در localStorage
-            let addresses = JSON.parse(localStorage.getItem('userAddresses')) || [];
-            addresses.push(newAddress);
-            localStorage.setItem('userAddresses', JSON.stringify(addresses));
-            
-            renderProfile();  // به‌روزرسانی پروفایل
+
+            // نمایش آدرس‌های جدید
+            renderAddresses(data.addresses); // فراخوانی تابع نمایش آدرس‌ها
         } else {
             showNotification(data.message || 'خطا در ارسال درخواست', 'error');
         }
@@ -1118,6 +1115,25 @@ function submitAddress(e) {
         console.error('خطا:', error);
         showNotification('خطا در ارسال درخواست', 'error');
     });
+}
+
+// تابع برای نمایش آدرس‌ها
+function renderAddresses(addresses) {
+    const userAddresses = document.getElementById("userAddresses");
+
+    if (userAddresses) {
+        if (addresses.length > 0) {
+            userAddresses.innerHTML = addresses.map(addr => `
+                <div class="bg-gray-100 dark:bg-gray-800 p-3 rounded-xl">
+                    <p class="font-bold">${addr.title || "عنوان ندارد"}</p>
+                    <p class="text-sm">${addr.full_address || "آدرس کامل ندارد"}</p>
+                    <p class="text-sm">${addr.city}, ${addr.province} - کد پستی: ${addr.postal_code}</p>
+                </div>
+            `).join("");
+        } else {
+            userAddresses.innerHTML = `<p class="text-gray-500 dark:text-gray-300">هیچ آدرسی ثبت نشده است.</p>`;
+        }
+    }
 }
 
 function saveAddressesToLocalStorage(addresses) {

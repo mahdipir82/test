@@ -505,6 +505,7 @@ def get_addresses(request):
 
     return JsonResponse({'addresses': address_list})
 
+
 @login_required
 def add_address(request):
     if request.method == 'POST':
@@ -524,4 +525,18 @@ def add_address(request):
             full_address=full_address,
             postal_code=postal_code
         )
-        return JsonResponse({'success': True, 'message': 'آدرس با موفقیت اضافه شد!'})
+
+        # دریافت آدرس‌های جدید و ارسال آن‌ها به کلاینت
+        addresses = Address.objects.filter(customer=user)
+        address_list = []
+
+        for address in addresses:
+            address_list.append({
+                'title': address.title,
+                'province': address.province,
+                'city': address.city,
+                'full_address': address.full_address,
+                'postal_code': address.postal_code,
+            })
+
+        return JsonResponse({'success': True, 'message': 'آدرس با موفقیت اضافه شد!', 'addresses': address_list})
