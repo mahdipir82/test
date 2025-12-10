@@ -45,6 +45,10 @@
                 <p class="font-bold">{{ address.title }}</p>
                 <p class="text-sm">{{ address.full_address }}</p>
                 <p class="text-sm">{{ address.city }}, {{ address.province }} - کد پستی: {{ address.postal_code }}</p>
+                <div class="flex gap-2 mt-2">
+                    <button onclick="openAddressModal({id: {{ address.id }}, title: '{{ address.title|escapejs }}', province: '{{ address.province|escapejs }}', city: '{{ address.city|escapejs }}', full_address: '{{ address.full_address|escapejs }}', postal_code: '{{ address.postal_code|escapejs }}'})" class="px-3 py-1 bg-blue-500 text-white rounded-lg text-sm">ویرایش</button>
+                    <button onclick="deleteAddress({{ address.id }})" class="px-3 py-1 bg-red-500 text-white rounded-lg text-sm">حذف</button>
+                </div>
             </div>
         {% endfor %}
     {% else %}
@@ -176,7 +180,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         e.preventDefault();
         const formData = new FormData(this);
 
-        const res = await fetch("accounts/profile/update/api/", {
+        const res = await fetch("/accounts/profile/update/api/", {
             method: "POST",
             body: formData,
             headers: { "X-Requested-With": "XMLHttpRequest" },
@@ -200,7 +204,44 @@ document.addEventListener("DOMContentLoaded", async () => {
             showNotification(data.message || "خطا در ذخیره پروفایل!");
         }
     });
-});    
+  renderProfileCart();
+});
+
+function renderProfileCart(){
+    const cartContainer = document.getElementById("profileCart");
+    if(!cartContainer) return;
+
+    let cartData = [];
+    try {
+        cartData = JSON.parse(cartContainer.dataset.cart || "[]");
+    } catch (e) {
+        cartData = [];
+    }
+
+    if(!Array.isArray(cartData) || cartData.length === 0){
+        cartContainer.innerHTML = `<div class="text-center py-6"><p class="text-gray-500 dark:text-gray-300">سبد خرید فعلی خالی است</p></div>`;
+        return;
+    }
+
+    let totalPrice = 0;
+    cartContainer.innerHTML = cartData.map(item => {
+        const quantity = item.quantity || item.count || 1;
+        const price = item.price || item.unit_price || 0;
+        const lineTotal = item.total_price || price * quantity;
+        totalPrice += lineTotal;
+        return `
+            <div class="flex items-center justify-between bg-gray-100 dark:bg-gray-800 p-3 rounded-xl">
+                <div>
+                    <p class="font-bold">${item.title || item.name || "محصول"}</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">قیمت واحد: ${(price || 0).toLocaleString()} تومان</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">تعداد: ${quantity}</p>
+                </div>
+                <div class="font-bold text-[#008B8B]">${lineTotal.toLocaleString()} تومان</div>
+            </div>`;
+    }).join("");
+
+    cartContainer.innerHTML += `<div class="flex justify-between items-center bg-white dark:bg-gray-900 p-3 rounded-xl border mt-2"><span class="font-bold">جمع کل</span><span class="font-bold text-[#008B8B]">${totalPrice.toLocaleString()} تومان</span></div>`;
+}    
 
 </script>
 {% endblock %}

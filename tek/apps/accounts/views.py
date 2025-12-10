@@ -495,21 +495,21 @@ from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from .models import Address
 
+def _serialize_user_addresses(user):
+    return [{
+        'id': address.id,
+        'title': address.title,
+        'province': address.province,
+        'city': address.city,
+        'full_address': address.full_address,
+        'postal_code': address.postal_code,
+    } for address in Address.objects.filter(customer=user)]
+
+
 @login_required
 def get_addresses(request):
     user = request.user  # گرفتن کاربر وارد شده
-    addresses = Address.objects.filter(customer=user)  # گرفتن آدرس‌ها برای کاربر
-    address_list = []
-
-    for address in addresses:
-        address_list.append({
-            'title': address.title,
-            'province': address.province,
-            'city': address.city,
-            'full_address': address.full_address,
-            'postal_code': address.postal_code,
-        })
-
+    address_list = _serialize_user_addresses(user)
     return JsonResponse({'addresses': address_list})
 
 
@@ -524,7 +524,7 @@ def add_address(request):
         postal_code = data.get('postal_code')
 
         user = request.user
-        new_address = Address.objects.create(
+        Address.objects.create(
             customer=user,
             title=title,
             province=province,
@@ -532,18 +532,52 @@ def add_address(request):
             full_address=full_address,
             postal_code=postal_code
         )
+        address_list = _serialize_user_addresses(user)
 
-        # دریافت آدرس‌های جدید و ارسال آن‌ها به کلاینت
-        addresses = Address.objects.filter(customer=user)
-        address_list = []
-
-        for address in addresses:
-            address_list.append({
-                'title': address.title,
-                'province': address.province,
-                'city': address.city,
-                'full_address': address.full_address,
-                'postal_code': address.postal_code,
-            })
 
         return JsonResponse({'success': True, 'message': 'آدرس با موفقیت اضافه شد!', 'addresses': address_list})
+    return JsonResponse({'success': False, 'message': 'متد نامعتبر است'}, status=405)
+
+
+
+@login_required
+def update_address(request, address_id):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'متد نامعتبر است'}, status=405)
+
+    try:
+        address = Address.objects.get(id=address_id, customer=request.user)
+    except Address.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'آدرس یافت نشد'}, status=404)
+
+    data = json.loads(request.body)
+    for field in ['title', 'province', 'city', 'full_address', 'postal_code']:
+        value = data.get(field)
+        if value is not None:
+            setattr(address, field, value)
+    address.save()
+
+    return JsonResponse({
+        'success': True,
+        'message': 'آدرس با موفقیت ویرایش شد!',
+        'addresses': _serialize_user_addresses(request.user)
+    })
+
+
+@login_required
+def delete_address(request, address_id):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'متد نامعتبر است'}, status=405)
+
+    try:
+        address = Address.objects.get(id=address_id, customer=request.user)
+    except Address.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'آدرس یافت نشد'}, status=404)
+
+    address.delete()
+
+    return JsonResponse({
+        'success': True,
+        'message': 'آدرس حذف شد',
+        'addresses': _serialize_user_addresses(request.user)
+    })

@@ -976,6 +976,7 @@ const iranProvinces = {
     "فارس": ["شیراز", "مرودشت", "کازرون", "داراب"],
     "آذربایجان شرقی": ["تبریز", "مراغه", "مرند"]
 };
+let userAddressesCache = [];
 function renderProfile(addressesFromServer = null) {
     const userAddresses = document.getElementById("userAddresses");
     const addresses = addressesFromServer;
@@ -1030,16 +1031,17 @@ function renderProfile(addressesFromServer = null) {
     }
 }
 
-function submitAddress(e) {
+function handleAddressSubmit(e) {
     e.preventDefault();
-
+    const form = e.target;
+    const addressId = form.dataset.addressId;
     const title = document.getElementById('addressTitle').value;
     const province = document.getElementById('addressProvince').value;
     const city = document.getElementById('addressCity').value;
     const fullAddress = document.getElementById('addressFull').value;
     const postal = document.getElementById('addressPostal').value;
 
-    const newAddress = {
+    const payload = {
         title: title,
         province: province,
         city: city,
@@ -1047,26 +1049,23 @@ function submitAddress(e) {
         postal_code: postal
     };
 
-    // ارسال آدرس به سرور
-    fetch('/accounts/add_address/', {
+    const url = addressId ? `/accounts/address/${addressId}/update/` : '/accounts/add_address/';
+
+    fetch(url, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRFToken': getCsrfToken()  // توکن CSRF
+           'X-CSRFToken': getCsrfToken()
         },
-        body: JSON.stringify(newAddress)
+        body: JSON.stringify(payload)
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showNotification('آدرس با موفقیت اضافه شد!', 'success');
-            
-            // به روز رسانی آدرس‌ها در localStorage
-            let addresses = JSON.parse(localStorage.getItem('userAddresses')) || [];
-            addresses.push(newAddress);
-            localStorage.setItem('userAddresses', JSON.stringify(addresses));
-            
-            renderProfile();  // به‌روزرسانی پروفایل
+           showNotification(data.message || 'آدرس با موفقیت ذخیره شد!', 'success');
+            closeAddressModal();
+            userAddressesCache = data.addresses || [];
+            renderAddresses(userAddressesCache);
         } else {
             showNotification(data.message || 'خطا در ارسال درخواست', 'error');
         }
@@ -1077,48 +1076,91 @@ function submitAddress(e) {
     });
 }
 
+function deleteAddress(addressId) {
+    fetch(`/accounts/address/${addressId}/delete/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCsrfToken()
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message || 'آدرس حذف شد', 'success');
+            userAddressesCache = data.addresses || [];
+            renderAddresses(userAddressesCache);
+        } else {
+            showNotification(data.message || 'خطا در حذف آدرس', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('خطا:', error);
+        showNotification('خطا در حذف آدرس', 'error');
+    });
+}
+
 function getCsrfToken() {
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
     return csrfToken;
 }
 
 // تابع برای نمایش آدرس‌ها
-function renderAddresses(addresses) {
+function renderAddresses(addresses = null) {
     const userAddresses = document.getElementById("userAddresses");
 
-    if (userAddresses) {
-        // ارسال درخواست به سرور برای دریافت آدرس‌ها
-        fetch('/accounts/get_addresses/')
-            .then(response => response.json())  // دریافت پاسخ به صورت JSON
-            .then(data => {
-                console.log("Received addresses:", data.addresses);  // نمایش آدرس‌ها در کنسول
-                if (data.addresses && data.addresses.length > 0) {
-                    userAddresses.innerHTML = data.addresses.map(addr => `
-                        <div class="bg-gray-100 dark:bg-gray-800 p-3 rounded-xl">
-                            <p class="font-bold">${addr.title || "عنوان ندارد"}</p>
-                            <p class="text-sm">${addr.full_address || "آدرس کامل ندارد"}</p>
-                            <p class="text-sm">${addr.city}, ${addr.province} - کد پستی: ${addr.postal_code}</p>
-                        </div>
-                    `).join("");
-                } else {
-                    userAddresses.innerHTML = `<p class="text-gray-500 dark:text-gray-300">هیچ آدرسی ثبت نشده است.</p>`;
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching addresses:', error);
-                userAddresses.innerHTML = `<p class="text-gray-500 dark:text-gray-300">خطا در بارگذاری آدرس‌ها</p>`;
-            });
+     if (!userAddresses) return;
+
+    const data = Array.isArray(addresses) ? addresses : userAddressesCache;
+
+    if (!Array.isArray(data) || data.length === 0) {
+        if (addresses === null) {
+            fetch('/accounts/get_addresses/')
+                .then(response => response.json())
+                .then(res => {
+                    userAddressesCache = res.addresses || [];
+                    renderAddresses(userAddressesCache);
+                })
+                .catch(error => {
+                    console.error('Error fetching addresses:', error);
+                    userAddresses.innerHTML = `<p class="text-gray-500 dark:text-gray-300">خطا در بارگذاری آدرس‌ها</p>`;
+                });
+        } else {
+            userAddresses.innerHTML = `<p class="text-gray-500 dark:text-gray-300">هیچ آدرسی ثبت نشده است.</p>`;
+        }
+        return;
     }
+userAddressesCache = data;
+    userAddresses.innerHTML = data.map(addr => `
+        <div class="bg-gray-100 dark:bg-gray-800 p-3 rounded-xl">
+            <p class="font-bold">${addr.title || "عنوان ندارد"}</p>
+            <p class="text-sm">${addr.full_address || "آدرس کامل ندارد"}</p>
+            <p class="text-sm">${addr.city || ""}, ${addr.province || ""} - کد پستی: ${addr.postal_code || ""}</p>
+            <div class="flex gap-2 mt-2">
+                <button onclick="openAddressModal({id: ${addr.id}, title: '${(addr.title || "").replace(/'/g, "&#39;")}', province: '${(addr.province || "").replace(/'/g, "&#39;")}', city: '${(addr.city || "").replace(/'/g, "&#39;")}', full_address: '${(addr.full_address || "").replace(/'/g, "&#39;")}', postal_code: '${(addr.postal_code || "").replace(/'/g, "&#39;")}'})" class="px-3 py-1 bg-blue-500 text-white rounded-lg text-sm">ویرایش</button>
+                <button onclick="deleteAddress(${addr.id})" class="px-3 py-1 bg-red-500 text-white rounded-lg text-sm">حذف</button>
+            </div>
+        </div>
+    `).join("");
 }
 
 function addAddress() {
+    openAddressModal();
+}
+
+function openAddressModal(address = null) {
     const addressModal = document.createElement('div');
     addressModal.className = 'modal active';
+    const titleValue = address?.title || '';
+    const provinceValue = address?.province || '';
+    const cityValue = address?.city || '';
+    const fullAddressValue = address?.full_address || '';
+    const postalValue = address?.postal_code || '';
+    const isEdit = Boolean(address?.id);
     addressModal.innerHTML = `
         <div class="modal-content p-0 w-full max-w-md">
           <div class="form-glass p-8 rounded-2xl">
             <div class="flex justify-between items-center mb-8">
-              <h3 class="text-2xl font-bold dark:text-white">افزودن آدرس جدید</h3>
+             <h3 class="text-2xl font-bold dark:text-white">${isEdit ? 'ویرایش آدرس' : 'افزودن آدرس جدید'}</h3>
               <button onclick="closeAddressModal()" class="glass p-2 hover:bg-white/20 rounded-xl transition-all duration-300 text-gray-500 hover:text-gray-700">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -1126,40 +1168,33 @@ function addAddress() {
               </button>
             </div>
             
-            <form onsubmit="submitAddress(event)" class="space-y-6">
+            <form onsubmit="handleAddressSubmit(event)" data-address-id="${address?.id || ''}" class="space-y-6">
               <div>
                 <label class="block font-bold mb-2 dark:text-white">عنوان آدرس</label>
-                <input type="text" id="addressTitle" required class="input-glass w-full px-4 py-3 rounded-xl focus:outline-none dark:text-white dark:placeholder-gray-400" placeholder="مثال: منزل، محل کار">
+                <input type="text" id="addressTitle" value="${titleValue}" required class="input-glass w-full px-4 py-3 rounded-xl focus:outline-none dark:text-white dark:placeholder-gray-400" placeholder="مثال: منزل، محل کار">
               </div>
               
               <div>
                 <label class="block font-bold mb-2 dark:text-white">استان</label>
-                <select id="addressProvince" required class="input-glass w-full px-4 py-3 rounded-xl focus:outline-none dark:text-white">
-                  <option value="">انتخاب استان</option>
-                  <option value="تهران">تهران</option>
-                  <option value="اصفهان">اصفهان</option>
-                  <option value="شیراز">شیراز</option>
-                  <option value="مشهد">مشهد</option>
-                  <option value="تبریز">تبریز</option>
-                </select>
+                   <input type="text" id="addressProvince" value="${provinceValue}" required class="input-glass w-full px-4 py-3 rounded-xl focus:outline-none dark:text-white" placeholder="استان">
               </div>
               
               <div>
                 <label class="block font-bold mb-2 dark:text-white">شهر</label>
-                <input type="text" id="addressCity" required class="input-glass w-full px-4 py-3 rounded-xl focus:outline-none dark:text-white dark:placeholder-gray-400" placeholder="نام شهر">
+             <input type="text" id="addressCity" value="${cityValue}" required class="input-glass w-full px-4 py-3 rounded-xl focus:outline-none dark:text-white dark:placeholder-gray-400" placeholder="نام شهر">
               </div>
               
               <div>
                 <label class="block font-bold mb-2 dark:text-white">آدرس کامل</label>
-                <textarea id="addressFull" required class="input-glass w-full px-4 py-3 rounded-xl focus:outline-none dark:text-white dark:placeholder-gray-400 h-24 resize-none" placeholder="آدرس کامل شامل خیابان، کوچه، پلاک و واحد"></textarea>
+                <textarea id="addressFull" required class="input-glass w-full px-4 py-3 rounded-xl focus:outline-none dark:text-white dark:placeholder-gray-400 h-24 resize-none" placeholder="آدرس کامل شامل خیابان، کوچه، پلاک و واحد">${fullAddressValue}</textarea>
               </div>
               
               <div>
                 <label class="block font-bold mb-2 dark:text-white">کد پستی</label>
-                <input type="text" id="addressPostal" required class="input-glass w-full px-4 py-3 rounded-xl focus:outline-none dark:text-white dark:placeholder-gray-400" placeholder="کد پستی 10 رقمی" maxlength="10">
+               <input type="text" id="addressPostal" value="${postalValue}" required class="input-glass w-full px-4 py-3 rounded-xl focus:outline-none dark:text-white dark:placeholder-gray-400" placeholder="کد پستی 10 رقمی" maxlength="10">
               </div>
               
-              <button type="submit" class="btn-primary btn-modern w-full py-4 rounded-xl text-lg font-bold">افزودن آدرس</button>
+             <button type="submit" class="btn-primary btn-modern w-full py-4 rounded-xl text-lg font-bold">${isEdit ? 'ذخیره تغییرات' : 'افزودن آدرس'}
             </form>
           </div>
         </div>
@@ -1175,10 +1210,6 @@ function closeAddressModal() {
     }
 }
 
-function getCsrfToken() {
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    return csrfToken;
-}
 
 
 
