@@ -205,6 +205,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     });
   renderProfileCart();
+  renderProfilePurchases();
 });
 
 function renderProfileCart(){
@@ -213,7 +214,9 @@ function renderProfileCart(){
 
     let cartData = [];
     try {
-        cartData = JSON.parse(cartContainer.dataset.cart || "[]");
+        cartData = (typeof cart !== "undefined" && Array.isArray(cart) && cart.length)
+            ? cart
+            : JSON.parse(cartContainer.dataset.cart || "[]");
     } catch (e) {
         cartData = [];
     }
@@ -222,26 +225,171 @@ function renderProfileCart(){
         cartContainer.innerHTML = `<div class="text-center py-6"><p class="text-gray-500 dark:text-gray-300">سبد خرید فعلی خالی است</p></div>`;
         return;
     }
-
+    if (typeof cart !== "undefined" && (!Array.isArray(cart) || cart.length === 0) && cartData.length) {
+        cart = cartData;
+        if (typeof saveCart === "function") saveCart();
+        if (typeof updateCartBadge === "function") updateCartBadge();
+    }   
     let totalPrice = 0;
     cartContainer.innerHTML = cartData.map(item => {
         const quantity = item.quantity || item.count || 1;
-        const price = item.price || item.unit_price || 0;
+        const price = item.discountPercent > 0 ? (item.finalPrice || item.price || 0) : (item.price || item.unit_price || 0);
         const lineTotal = item.total_price || price * quantity;
         totalPrice += lineTotal;
+        const stock = item.stock_quantity || item.stock || null;
         return `
-            <div class="flex items-center justify-between bg-gray-100 dark:bg-gray-800 p-3 rounded-xl">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 bg-gray-100 dark:bg-gray-800 p-3 rounded-xl">
                 <div>
                     <p class="font-bold">${item.title || item.name || "محصول"}</p>
                     <p class="text-sm text-gray-600 dark:text-gray-400">قیمت واحد: ${(price || 0).toLocaleString()} تومان</p>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">تعداد: ${quantity}</p>
+                     <p class="text-sm text-gray-600 dark:text-gray-400">${stock ? `موجودی: ${stock}` : ""}</p>
                 </div>
-                <div class="font-bold text-[#008B8B]">${lineTotal.toLocaleString()} تومان</div>
+                <div class="flex items-center gap-2">
+                    <button data-action="dec" data-id="${item.id}" class="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded">−</button>
+                    <span class="font-bold">${quantity}</span>
+                    <button data-action="inc" data-id="${item.id}" class="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded">+</button>
+                </div>
+                <div class="text-right">
+                    <div class="font-bold text-[#008B8B]">${lineTotal.toLocaleString()} تومان</div>
+                    <button data-action="remove" data-id="${item.id}" class="text-sm text-red-500 mt-1">حذف</button>
+                </div>
+                
             </div>`;
     }).join("");
 
     cartContainer.innerHTML += `<div class="flex justify-between items-center bg-white dark:bg-gray-900 p-3 rounded-xl border mt-2"><span class="font-bold">جمع کل</span><span class="font-bold text-[#008B8B]">${totalPrice.toLocaleString()} تومان</span></div>`;
 }    
+cartContainer.querySelectorAll('[data-action="inc"]').forEach(btn => btn.addEventListener('click', () => updateProfileCartItem(btn.dataset.id, 1)));
+    cartContainer.querySelectorAll('[data-action="dec"]').forEach(btn => btn.addEventListener('click', () => updateProfileCartItem(btn.dataset.id, -1)));
+    cartContainer.querySelectorAll('[data-action="remove"]').forEach(btn => btn.addEventListener('click', () => removeProfileCartItem(btn.dataset.id)));
+}
 
+function updateProfileCartItem(id, change){
+    if (typeof cart === "undefined" || !Array.isArray(cart)) return;
+    const item = cart.find(i => String(i.id) === String(id));
+    if(!item) return;
+
+    const stock = item.stock_quantity || item.stock || Infinity;
+    const newQuantity = (item.quantity || 1) + change;
+
+    if(newQuantity > stock){
+        showNotification("موجودی کافی نیست", "error");
+        return;
+    }
+
+    if(newQuantity <= 0){
+        removeProfileCartItem(id);
+        return;
+    }
+
+    item.quantity = newQuantity;
+    if (typeof saveCart === "function") saveCart();
+    if (typeof updateCartBadge === "function") updateCartBadge();
+    renderProfileCart();
+}
+
+function removeProfileCartItem(id){
+    if (typeof cart === "undefined" || !Array.isArray(cart)) return;
+    cart = cart.filter(i => String(i.id) !== String(id));
+    if (typeof saveCart === "function") saveCart();
+    if (typeof updateCartBadge === "function") updateCartBadge();
+    renderProfileCart();
+}
+
+function getPurchaseHistory(){
+    try{
+        const stored = JSON.parse(localStorage.getItem("purchaseHistory") || "[]");
+        return Array.isArray(stored) ? stored : [];
+    }catch(err){
+        return [];
+    }
+}
+
+function savePurchaseHistory(history){
+    localStorage.setItem("purchaseHistory", JSON.stringify(history));
+}
+
+function renderProfilePurchases(){
+    const userPurchases = document.getElementById("userPurchases");
+    const purchaseCountElement = document.getElementById("purchaseCount");
+    const totalPurchases = document.getElementById("totalPurchases");
+    const totalSpent = document.getElementById("totalSpent");
+    const lastPurchase = document.getElementById("lastPurchase");
+
+    if(!userPurchases) return;
+
+    const history = getPurchaseHistory();
+
+    if(history.length === 0){
+        if (purchaseCountElement) purchaseCountElement.textContent = "0 خرید";
+        userPurchases.innerHTML = `<p class="text-gray-500 dark:text-gray-300">هنوز هیچ خریدی ثبت نشده است.</p>`;
+        if (totalPurchases) totalPurchases.textContent = "0";
+        if (totalSpent) totalSpent.textContent = "0 تومان";
+        if (lastPurchase) lastPurchase.textContent = "-";
+        return;
+    }
+
+    if (purchaseCountElement) purchaseCountElement.textContent = `${history.length} خرید`;
+
+    userPurchases.innerHTML = history.map(purchase => {
+        const itemsList = Array.isArray(purchase.items) ? purchase.items.map(it => `<li class="text-sm text-gray-600 dark:text-gray-400">${it.quantity} × ${it.title || it.name || "محصول"}</li>`).join("") : "";
+        return `
+            <div class="bg-gray-100 dark:bg-gray-800 p-4 rounded-xl space-y-2">
+                <div class="flex items-center justify-between">
+                    <p class="font-bold">${purchase.title || "سفارش"}</p>
+                    <span class="text-sm text-gray-500">${purchase.purchaseDate || ""}</span>
+                </div>
+                ${itemsList ? `<ul class="list-disc list-inside">${itemsList}</ul>` : ""}
+                <p class="font-bold text-[#008B8B]">${(purchase.total || purchase.price || 0).toLocaleString()} تومان</p>
+            </div>
+        `;
+    }).join("");
+
+    const totalAmount = history.reduce((sum, p) => sum + (p.total || p.price || 0), 0);
+    if (totalPurchases) totalPurchases.textContent = history.length;
+    if (totalSpent) totalSpent.textContent = `${totalAmount.toLocaleString()} تومان`;
+    if (lastPurchase) lastPurchase.textContent = history[history.length - 1].purchaseDate || "-";
+}
+
+function finalizeOrder(){
+    if (typeof cart === "undefined" || !Array.isArray(cart) || cart.length === 0){
+        showNotification('سبد خرید فعلی خالی است!', 'error');
+        return;
+    }
+
+    const purchaseDate = new Date().toLocaleDateString('fa-IR');
+    const items = cart.map(item => {
+        const quantity = item.quantity || 1;
+        const unitPrice = item.discountPercent > 0 ? (item.finalPrice || item.price || 0) : (item.price || 0);
+        return {
+            id: item.id,
+            title: item.name || item.title || "محصول",
+            quantity,
+            unit_price: unitPrice,
+            total_price: unitPrice * quantity
+        };
+    });
+
+    const total = items.reduce((sum, it) => sum + (it.total_price || 0), 0);
+    const history = getPurchaseHistory();
+    const newOrder = {
+        id: `order-${Date.now()}`,
+        title: `سفارش شماره ${history.length + 1}`,
+        purchaseDate,
+        items,
+        total
+    };
+
+    history.push(newOrder);
+    savePurchaseHistory(history);
+    renderProfilePurchases();
+
+    showNotification('این سایت فقط برای رزومه است و قابلیت فروش ندارد.', 'info');
+
+    cart = [];
+    if (typeof saveCart === "function") saveCart();
+    if (typeof updateCartBadge === "function") updateCartBadge();
+    renderProfileCart();
+}
 </script>
 {% endblock %}
