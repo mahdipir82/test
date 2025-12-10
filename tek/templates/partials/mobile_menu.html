@@ -18,7 +18,7 @@
                 class="block py-3 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition dark:text-gray-300">⌨️
                 لوازم جانبی</a> <a href="{% url 'blogs:post_list' %}" onclick="toggleMobileMenu()"
                 class="block py-3 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition dark:text-gray-300">📝
-                بلاگ</a> <a href="#" onclick="navigateTo('about'); toggleMobileMenu()"
+                بلاگ</a> <a href="{% url 'main:index' %}#about-section" onclick="toggleMobileMenu()"
                 class="block py-3 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition dark:text-gray-300">ℹ️
                 درباره ما</a>
             <div class="border-t pt-4 mt-6">

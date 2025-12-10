@@ -1,4 +1,4 @@
-from django.db.models import Avg
+from django.db.models import Avg, Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 
 from .forms import BlogCommentForm
@@ -6,8 +6,15 @@ from .models import BlogPost
 
 
 def post_list(request):
-    posts = BlogPost.objects.filter(is_published=True)
-    return render(request, 'blogs_app/post_list.html', {'posts': posts})
+        posts = (
+            BlogPost.objects.filter(is_published=True)
+            .annotate(
+                comment_count=Count('comments', filter=Q(comments__is_approved=True)),
+                avg_rating=Avg('comments__rating', filter=Q(comments__is_approved=True)),
+            )
+            .prefetch_related('comments')
+        )
+        return render(request, 'blogs_app/post_list.html', {'posts': posts})
 
 
 def post_detail(request, slug):
