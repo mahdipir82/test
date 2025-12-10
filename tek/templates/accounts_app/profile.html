@@ -258,7 +258,7 @@ function renderProfileCart(){
     }).join("");
 
     cartContainer.innerHTML += `<div class="flex justify-between items-center bg-white dark:bg-gray-900 p-3 rounded-xl border mt-2"><span class="font-bold">جمع کل</span><span class="font-bold text-[#008B8B]">${totalPrice.toLocaleString()} تومان</span></div>`;
-}    
+   
 cartContainer.querySelectorAll('[data-action="inc"]').forEach(btn => btn.addEventListener('click', () => updateProfileCartItem(btn.dataset.id, 1)));
     cartContainer.querySelectorAll('[data-action="dec"]').forEach(btn => btn.addEventListener('click', () => updateProfileCartItem(btn.dataset.id, -1)));
     cartContainer.querySelectorAll('[data-action="remove"]').forEach(btn => btn.addEventListener('click', () => removeProfileCartItem(btn.dataset.id)));
