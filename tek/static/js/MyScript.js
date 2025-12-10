@@ -977,14 +977,12 @@ const iranProvinces = {
     "آذربایجان شرقی": ["تبریز", "مراغه", "مرند"]
 };
 function renderProfile() {
-     const userAddresses = document.getElementById("userAddresses");
-
-    // خواندن آدرس‌ها از localStorage
-    const addresses = JSON.parse(localStorage.getItem('userAddresses')) || [];
+     // نمایش آدرس‌ها از localStorage
+    const userAddresses = document.getElementById("userAddresses");
+    const addresses = JSON.parse(localStorage.getItem('userAddresses')) || [];  // خواندن آدرس‌ها از localStorage
 
     if (userAddresses) {
         if (addresses.length > 0) {
-            // نمایش آدرس‌ها از localStorage
             userAddresses.innerHTML = addresses.map(addr => `
                 <div class="bg-gray-100 dark:bg-gray-800 p-3 rounded-xl">
                     <p class="font-bold">${addr.title || "عنوان ندارد"}</p>
@@ -997,12 +995,16 @@ function renderProfile() {
         }
     }
 
+
     /* ==========================================================
        1) نمایش سبد خرید فعلی
     ========================================================== */
-   const profileCart = document.getElementById("profileCart");
+   // نمایش سبد خرید از localStorage
+    const profileCart = document.getElementById("profileCart");
+    const cart = JSON.parse(localStorage.getItem('cart')) || [];  // خواندن سبد خرید از localStorage
+
     if (profileCart) {
-        if (!cart || cart.length === 0) {
+        if (cart.length === 0) {
             profileCart.innerHTML = `
                 <div class="text-center py-6">
                     <p class="text-gray-500 dark:text-gray-300">سبد خرید فعلی خالی است</p>
@@ -1012,7 +1014,7 @@ function renderProfile() {
             profileCart.innerHTML = cart.map(item => `
                 <div class="flex items-center justify-between bg-gray-100 dark:bg-gray-800 p-3 rounded-xl">
                     <div>
-                        <p class="font-bold">${item.title}</p>
+                        <p class="font-bold">${item.name}</p>
                         <p class="text-sm text-gray-600 dark:text-gray-400">${item.price.toLocaleString()} تومان</p>
                     </div>
                 </div>
@@ -1104,9 +1106,13 @@ function submitAddress(e) {
     .then(data => {
         if (data.success) {
             showNotification('آدرس با موفقیت اضافه شد!', 'success');
-
-            // نمایش آدرس‌های جدید
-            renderAddresses(data.addresses); // فراخوانی تابع نمایش آدرس‌ها
+            
+            // به روز رسانی آدرس‌ها در localStorage
+            let addresses = JSON.parse(localStorage.getItem('userAddresses')) || [];
+            addresses.push(newAddress);
+            localStorage.setItem('userAddresses', JSON.stringify(addresses));
+            
+            renderProfile();  // به‌روزرسانی پروفایل
         } else {
             showNotification(data.message || 'خطا در ارسال درخواست', 'error');
         }
@@ -1117,22 +1123,37 @@ function submitAddress(e) {
     });
 }
 
+function getCsrfToken() {
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    return csrfToken;
+}
+
 // تابع برای نمایش آدرس‌ها
 function renderAddresses(addresses) {
     const userAddresses = document.getElementById("userAddresses");
 
     if (userAddresses) {
-        if (addresses.length > 0) {
-            userAddresses.innerHTML = addresses.map(addr => `
-                <div class="bg-gray-100 dark:bg-gray-800 p-3 rounded-xl">
-                    <p class="font-bold">${addr.title || "عنوان ندارد"}</p>
-                    <p class="text-sm">${addr.full_address || "آدرس کامل ندارد"}</p>
-                    <p class="text-sm">${addr.city}, ${addr.province} - کد پستی: ${addr.postal_code}</p>
-                </div>
-            `).join("");
-        } else {
-            userAddresses.innerHTML = `<p class="text-gray-500 dark:text-gray-300">هیچ آدرسی ثبت نشده است.</p>`;
-        }
+        // ارسال درخواست به سرور برای دریافت آدرس‌ها
+        fetch('/accounts/get_addresses/')
+            .then(response => response.json())  // دریافت پاسخ به صورت JSON
+            .then(data => {
+                console.log("Received addresses:", data.addresses);  // نمایش آدرس‌ها در کنسول
+                if (data.addresses && data.addresses.length > 0) {
+                    userAddresses.innerHTML = data.addresses.map(addr => `
+                        <div class="bg-gray-100 dark:bg-gray-800 p-3 rounded-xl">
+                            <p class="font-bold">${addr.title || "عنوان ندارد"}</p>
+                            <p class="text-sm">${addr.full_address || "آدرس کامل ندارد"}</p>
+                            <p class="text-sm">${addr.city}, ${addr.province} - کد پستی: ${addr.postal_code}</p>
+                        </div>
+                    `).join("");
+                } else {
+                    userAddresses.innerHTML = `<p class="text-gray-500 dark:text-gray-300">هیچ آدرسی ثبت نشده است.</p>`;
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching addresses:', error);
+                userAddresses.innerHTML = `<p class="text-gray-500 dark:text-gray-300">خطا در بارگذاری آدرس‌ها</p>`;
+            });
     }
 }
 
@@ -1143,6 +1164,14 @@ function saveAddressesToLocalStorage(addresses) {
 function getAddressesFromLocalStorage() {
     const addresses = localStorage.getItem('userAddresses');
     return addresses ? JSON.parse(addresses) : [];
+}
+function saveCartToLocalStorage() {
+    localStorage.setItem('cart', JSON.stringify(cart));
+}
+
+function getCartFromLocalStorage() {
+    const cart = localStorage.getItem('cart');
+    return cart ? JSON.parse(cart) : [];
 }
 
 function addAddress() {
