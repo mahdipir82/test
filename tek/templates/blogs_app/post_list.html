@@ -1,28 +1,70 @@
 {% extends "maintemplate.html" %}
 {% load static %}
 {% block content %}
-<div class="container mx-auto px-4 py-10">
-    <div class="flex items-center justify-between mb-6">
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">بلاگ</h1>
-    </div>
-    <div class="grid md:grid-cols-2 gap-6">
-        {% for post in posts %}
-            <a href="{{ post.get_absolute_url }}" class="block bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-lg transition p-6 border border-gray-100 dark:border-gray-700">
-                {% if post.cover_image %}
-                    <img src="{{ post.cover_image.url }}" alt="{{ post.title }}" class="w-full h-52 object-cover rounded-xl mb-4">
-                {% endif %}
-                <h2 class="text-2xl font-bold mb-2 text-gray-900 dark:text-white">{{ post.title }}</h2>
-                <p class="text-gray-600 dark:text-gray-400 line-clamp-3 mb-3">{{ post.content|striptags|truncatewords:30 }}</p>
-                <div class="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
-                    <span>{{ post.created_at|date:"Y/m/d" }}</span>
-                    <span>میانگین امتیاز: {{ post.average_rating }}</span>
+<!-- Blog Page -->
+  
+        <div class="container mx-auto px-4 py-16">
+            <div class="text-center mb-12">
+                <h2
+                    class="text-5xl font-bold mb-4 dark:text-white bg-gradient-to-r from-[#008B8B] to-[#006666] bg-clip-text text-transparent">
+                    بلاگ و مقالات</h2>
+                <p class="text-xl text-gray-600 dark:text-gray-400">آخرین اخبار و راهنمای‌های تکنولوژی</p>
+            </div><!-- Featured Article -->
+            <div class="mb-12">
+                <div class="form-glass rounded-3xl overflow-hidden">
+                    <div class="grid lg:grid-cols-2 gap-0">
+                        <div class="relative"><img
+                                src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='500' viewBox='0 0 800 500'%3E%3Crect fill='%23f8f9fa' width='800' height='500' rx='24'/%3E%3Crect fill='%23e9ecef' x='40' y='40' width='720' height='300' rx='16'/%3E%3Crect fill='%23495057' x='60' y='60' width='680' height='260' rx='12'/%3E%3Crect fill='%23adb5bd' x='80' y='80' width='640' height='220' rx='8'/%3E%3Ccircle cx='400' cy='190' r='40' fill='%23008B8B'/%3E%3Ctext x='400' y='205' font-family='Arial' font-size='28' fill='white' text-anchor='middle'%3E📰%3C/text%3E%3Crect fill='%23dee2e6' x='60' y='360' width='680' height='80' rx='12'/%3E%3Ctext x='400' y='410' font-family='Arial' font-size='24' fill='%23495057' text-anchor='middle'%3EFeatured Article%3C/text%3E%3C/svg%3E"
+                                alt="مقاله ویژه" class="w-full h-80 lg:h-full object-cover"
+                                onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'800\' height=\'500\' viewBox=\'0 0 800 500\'%3E%3Crect fill=\'%23008B8B\' width=\'800\' height=\'500\'/%3E%3Ctext x=\'400\' y=\'260\' font-family=\'Arial\' font-size=\'32\' fill=\'white\' text-anchor=\'middle\'%3EFeatured Article%3C/text%3E%3C/svg%3E'; this.alt='Image failed to load';">
+                            <div
+                                class="absolute top-4 right-4 bg-gradient-to-r from-red-500 to-pink-500 text-white px-4 py-2 rounded-full text-sm font-bold">
+                                مقاله ویژه
+                            </div>
+                        </div>
+                        <div class="p-8 lg:p-12">
+                            <div class="flex items-center gap-4 mb-4"><span
+                                    class="bg-[#008B8B] text-white px-3 py-1 rounded-full text-sm">تکنولوژی</span> <span
+                                    class="text-gray-500 text-sm">1403/09/20</span>
+                            </div>
+                            <h3 class="text-3xl font-bold mb-4 dark:text-white">راهنمای کامل خرید لپ‌تاپ در سال 1403
+                            </h3>
+                            <p class="text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">در این مقاله جامع، تمام
+                                نکات مهم برای خرید بهترین لپ‌تاپ متناسب با نیاز و بودجه شما را بررسی می‌کنیم. از انتخاب
+                                پردازنده تا کارت گرافیک و حافظه.</p>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div
+                                        class="w-10 h-10 bg-gradient-to-r from-[#008B8B] to-[#006666] rounded-full flex items-center justify-center text-white font-bold">
+                                        م
+                                    </div>
+                                    <div>
+                                        <p class="font-medium dark:text-white">محمد احمدی</p>
+                                        <p class="text-sm text-gray-500">نویسنده تخصصی</p>
+                                    </div>
+                                </div><button onclick="openBlogPost('featured')"
+                                    class="btn-primary btn-modern px-6 py-3 rounded-xl">مطالعه مقاله</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </a>
-        {% empty %}
-            <div class="col-span-2 text-center text-gray-500 dark:text-gray-400">
-                هنوز مقاله‌ای منتشر نشده است.
+            </div><!-- Blog Categories -->
+            <div class="flex flex-wrap gap-4 mb-8 justify-center"><button onclick="filterBlogPosts('all')"
+                    class="blog-filter-btn active bg-[#008B8B] text-white px-6 py-3 rounded-xl font-medium transition-all hover:scale-105">همه
+                    مقالات</button> <button onclick="filterBlogPosts('laptop')"
+                    class="blog-filter-btn glass px-6 py-3 rounded-xl font-medium transition-all hover:scale-105 dark:text-white">لپ‌تاپ</button>
+                <button onclick="filterBlogPosts('computer')"
+                    class="blog-filter-btn glass px-6 py-3 rounded-xl font-medium transition-all hover:scale-105 dark:text-white">کامپیوتر</button>
+                <button onclick="filterBlogPosts('gaming')"
+                    class="blog-filter-btn glass px-6 py-3 rounded-xl font-medium transition-all hover:scale-105 dark:text-white">گیمینگ</button>
+                <button onclick="filterBlogPosts('guide')"
+                    class="blog-filter-btn glass px-6 py-3 rounded-xl font-medium transition-all hover:scale-105 dark:text-white">راهنما</button>
+            </div><!-- Blog Posts Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="blogList"></div>
+            <!-- Load More Button -->
+            <div class="text-center mt-12"><button onclick="loadMoreBlogPosts()"
+                    class="btn-primary btn-modern px-8 py-4 rounded-xl text-lg font-medium">مشاهده مقالات بیشتر</button>
             </div>
-        {% endfor %}
+        </div>
     </div>
-</div>
 {% endblock %}

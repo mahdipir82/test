@@ -2,6 +2,7 @@
 document.addEventListener("DOMContentLoaded", function () {
     currentUser = JSON.parse(localStorage.getItem("currentUser"));
     updateAuthButtons(currentUser);
+    renderBlogPosts();
 });
 let cart = [];
 let currentUser = null;
@@ -318,6 +319,33 @@ function renderProductSection(elementId, productList) {
 let currentBlogFilter = 'all';
 let displayedBlogPosts = 6;
 
+function updateFeaturedBlogPost(post) {
+    const featuredImage = document.getElementById('blogFeaturedImage');
+    const featuredCategory = document.getElementById('blogFeaturedCategory');
+    const featuredTag = document.getElementById('blogFeaturedTag');
+    const featuredDate = document.getElementById('blogFeaturedDate');
+    const featuredTitle = document.getElementById('blogFeaturedTitle');
+    const featuredExcerpt = document.getElementById('blogFeaturedExcerpt');
+    const featuredAuthorInitial = document.getElementById('blogFeaturedAuthorInitial');
+    const featuredAuthorName = document.getElementById('blogFeaturedAuthorName');
+    const featuredButton = document.getElementById('blogFeaturedButton');
+
+    if (!post || !featuredImage || !featuredCategory || !featuredTag || !featuredDate || !featuredTitle || !featuredExcerpt || !featuredAuthorInitial || !featuredAuthorName || !featuredButton) {
+        return;
+    }
+
+    featuredImage.src = post.image;
+    featuredImage.alt = post.title;
+    featuredCategory.textContent = getCategoryName(post.category);
+    featuredTag.textContent = getCategoryName(post.category);
+    featuredDate.textContent = post.date;
+    featuredTitle.textContent = post.title;
+    featuredExcerpt.textContent = post.excerpt;
+    featuredAuthorInitial.textContent = post.author.charAt(0);
+    featuredAuthorName.textContent = post.author;
+    featuredButton.onclick = () => openBlogPost(post.id);
+}
+
 function renderBlogPosts() {
     const container = document.getElementById('blogList');
     if (!container) return;
@@ -325,6 +353,9 @@ function renderBlogPosts() {
     const filteredPosts = currentBlogFilter === 'all'
         ? blogPosts
         : blogPosts.filter(post => post.category === currentBlogFilter);
+     if (filteredPosts.length > 0) {
+        updateFeaturedBlogPost(filteredPosts[0]);
+    }
 
     const postsToShow = filteredPosts.slice(0, displayedBlogPosts);
 
@@ -352,6 +383,10 @@ function renderBlogPosts() {
           </div>
         </div>
       `).join('');
+      const loadMoreBtn = document.getElementById('blogLoadMore');
+    if (loadMoreBtn) {
+        loadMoreBtn.style.display = displayedBlogPosts >= filteredPosts.length ? 'none' : 'inline-flex';
+    }
 }
 
 function getCategoryName(category) {

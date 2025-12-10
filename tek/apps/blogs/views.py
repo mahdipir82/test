@@ -44,3 +44,7 @@ def post_detail(request, slug):
         'form': form,
     }
     return render(request, 'blogs_app/post_detail.html', context)
+
+
+def about(request):
+    return render(request, 'blogs_app/about.html')
