@@ -1,11 +1,9 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from import_export import resources
-from import_export.admin import ImportExportModelAdmin
 from .models import ProductReview
 from .models import (
-    Brand, Category, Feature, FeatureValue,
-    Product, ProductFeature, ProductGallery,ProductColor
+    Brand, Category, Feature,FeatureValue,
+    Product, ProductFeature,ProductGallery,ProductColor
 )
 
 # ================================
@@ -30,16 +28,9 @@ class ProductColorInline(admin.TabularInline):
 # ============================
 # 📘 Brand Resource
 # ============================
-class BrandResource(resources.ModelResource):
-    class Meta:
-        model = Brand
-        fields = ('id', 'title', 'slug')
-        export_order = ('id', 'title', 'slug')
-
 
 @admin.register(Brand)
-class BrandAdmin(ImportExportModelAdmin):
-    resource_class = BrandResource
+class BrandAdmin(admin.ModelAdmin):
     list_display = ('title', 'slug', 'image')
     search_fields = ('title',)
     prepopulated_fields = {'slug': ('title',)}
@@ -54,16 +45,9 @@ class BrandAdmin(ImportExportModelAdmin):
 # ============================
 # 📘 Product Group Resource
 # ============================
-class ProductGroupResource(resources.ModelResource):
-    class Meta:
-        model = Category
-        fields = ('id', 'title', 'is_active', 'parent', 'slug')
-        export_order = ('id', 'group_title', 'is_active', 'group_parent', 'slug')
-
 
 @admin.register(Category)
-class ProductGroupAdmin(ImportExportModelAdmin):
-    resource_class = ProductGroupResource
+class ProductGroupAdmin(admin.ModelAdmin):
     list_display = ('title', 'is_active', 'parent', 'slug', 'image')
     list_filter = ('is_active',)
     search_fields = ('title', 'description')
@@ -95,11 +79,6 @@ class FeatureAdmin(admin.ModelAdmin):
 # ============================
 # 📘 Product Resource
 # ============================
-class ProductResource(resources.ModelResource):
-    class Meta:
-        model = Product
-        fields = ('id', 'name', 'price', 'brand', 'is_active', 'slug')
-        export_order = ('id', 'name', 'price', 'brand', 'is_active', 'slug')
 
 
 class ProductFeatureInline(admin.TabularInline):
@@ -120,8 +99,7 @@ class ProductGalleryInline(admin.TabularInline):
 
 
 @admin.register(Product)
-class ProductAdmin(ImportExportModelAdmin):
-    resource_class = ProductResource
+class ProductAdmin(admin.ModelAdmin):
     list_display = ('name', 'brand', 'price', 'is_active', 'get_categories', 'thumbnail')
     list_filter = ('is_active', 'brand', 'categories')
     search_fields = ('name', 'description')

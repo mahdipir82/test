@@ -38,7 +38,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'import_export',
     #apps
     "apps.main.apps.MainConfig",
     "apps.products.apps.ProductsConfig",

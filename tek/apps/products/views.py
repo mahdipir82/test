@@ -1,10 +1,11 @@
+from django.db.models import Avg
+from django.shortcuts import get_object_or_404, redirect, render
 from rest_framework import viewsets
-from apps.products.models import Brand, Category, Product
-from apps.products.serializers import BrandSerializer, CategorySerializer, ProductSerializer
-from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import Product
-from .serializers import ProductSerializer
+from rest_framework.views import APIView
+from .forms import ProductReviewForm
+from .models import Brand, Category, Product
+from .serializers import BrandSerializer, CategorySerializer, ProductSerializer
 
 
 class BrandViewSet(viewsets.ModelViewSet):
@@ -32,11 +33,6 @@ class ProductListAPIView(APIView):
         return Response(serializer.data)
     
 
-from .models import Product, Category
-from .forms import ProductReviewForm
-from django.shortcuts import render
-from django.db.models import Avg
-from django.shortcuts import get_object_or_404, redirect, render
 def laptops_page(request):
     products = Product.objects.filter(
         categories__slug="lt",
