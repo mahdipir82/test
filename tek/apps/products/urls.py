@@ -14,4 +14,5 @@ urlpatterns = [
     path('laptops/', views.laptops_page, name='laptops_page'),
     path('computers/', views.computers_page, name='computers_page'),
     path('accessories/', views.accessories_page, name='accessories_page'),
+    path('<slug:slug>/', views.product_detail, name='product_detail'),
 ] + router.urls

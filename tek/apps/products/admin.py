@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 from import_export import resources
 from import_export.admin import ImportExportModelAdmin
-
+from .models import ProductReview
 from .models import (
     Brand, Category, Feature, FeatureValue,
     Product, ProductFeature, ProductGallery,ProductColor
@@ -165,3 +165,16 @@ class ProductGalleryAdmin(admin.ModelAdmin):
             return format_html('<img src="{}" width="60" height="60" style="border-radius:8px;">', obj.image.url)
         return "—"
     image_preview.short_description = 'تصویر'
+
+
+
+@admin.register(ProductReview)
+class ProductReviewAdmin(admin.ModelAdmin):
+    list_display = ('product', 'name', 'rating', 'is_approved', 'created_at')
+    list_filter = ('is_approved', 'rating', 'created_at')
+    search_fields = ('product__name', 'name', 'email', 'comment')
+    actions = ['approve_reviews']
+
+    @admin.action(description='تایید نظرات انتخاب شده')
+    def approve_reviews(self, request, queryset):
+        queryset.update(is_approved=True)

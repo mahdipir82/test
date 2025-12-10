@@ -7,7 +7,7 @@ from django.urls import reverse
 from django.db.models import Sum
 from utils import FileUpload
 
-
+from django.conf import settings
 # ================================
 # Brand
 # ================================
@@ -64,7 +64,16 @@ class Category(models.Model):
     class Meta:
         verbose_name = 'دسته‌بندی'
         verbose_name_plural = 'دسته‌بندی‌ها'
+    @property
+    def average_rating(self):
+        approved = self.reviews.filter(is_approved=True)
+        if not approved.exists():
+            return 0
+        return round(approved.aggregate(models.Avg('rating'))['rating__avg'] or 0, 1)
 
+    @property
+    def approved_reviews(self):
+        return self.reviews.filter(is_approved=True)
 
 # ================================
 # ویژگی کالا
@@ -181,3 +190,38 @@ class ProductColor(models.Model):
     class Meta:
         verbose_name = 'رنگ محصول'
         verbose_name_plural = 'رنگ‌های محصول'
+        
+class ProductReview(models.Model):
+    RATING_CHOICES = [(i, str(i)) for i in range(1, 6)]
+
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='reviews', verbose_name='کالا')
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='product_reviews',
+        verbose_name='کاربر'
+    )
+    name = models.CharField(max_length=120, verbose_name='نام')
+    email = models.EmailField(verbose_name='ایمیل')
+    rating = models.PositiveSmallIntegerField(choices=RATING_CHOICES, verbose_name='امتیاز')
+    comment = models.TextField(verbose_name='متن نظر')
+    is_approved = models.BooleanField(default=False, verbose_name='تایید شده')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='تاریخ ایجاد')
+
+    class Meta:
+        verbose_name = 'نظر محصول'
+        verbose_name_plural = 'نظرات محصولات'
+        ordering = ('-created_at',)
+
+    def __str__(self):
+        return f"{self.product.name} - {self.name} ({self.rating})"
+
+    @property
+    def display_name(self):
+        if self.user and self.user.get_full_name():
+            return self.user.get_full_name()
+        if self.user:
+            return self.user.username
+        return self.name

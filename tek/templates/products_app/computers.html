@@ -41,9 +41,9 @@ function renderProductSection(elementId, productList) {
                 <span class="${priceColor} font-bold text-xl">${product.originalPrice} تومان</span>
 
                 <div class="flex gap-2 mt-4">
-                    <button onclick="viewProduct('${product.id}')" class="flex-1 bg-gray-100 dark:bg-gray-700 px-3 py-2 rounded-lg">
+                    <a href="${product.slug ? `/products/${product.slug}/` : '#'}" class="flex-1 text-center bg-gray-100 dark:bg-gray-700 px-3 py-2 rounded-lg">
                         مشاهده
-                    </button>
+                    </a>
                     <button onclick="addToCart('${product.id}')" class="flex-1 ${buttonClass} px-3 py-2 rounded-lg">
                         افزودن
                     </button>

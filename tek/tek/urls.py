@@ -25,7 +25,7 @@ urlpatterns = [
     path('',include('apps.main.urls',namespace='main')),
     path('products/', include('apps.products.urls',namespace="products")),
     path('accounts/', include('apps.accounts.urls')),
-    # path('blogs/', include('apps.blogs.urls', namespace='blogs')),
+    path('blogs/', include('apps.blogs.urls', namespace='blogs')),
     path('api/warehouse/', include('apps.warehouse.urls', namespace='warehouse')),
     path('discounts/',include('apps.discounts.urls',namespace='discounts')),
     path("ai/", include("apps.aiassistant.urls")),

@@ -49,7 +49,7 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = [
-            'id', 'name', 'description', 'price', 'main_image',
+            'id', 'name', 'slug', 'description', 'price', 'main_image',
             'brand', 'categories', 'colors', 'features',
             'discount', 'originalPrice', 'finalPrice',
             'stock_quantity', 'gallery_images'  # 👈 اضافه شد

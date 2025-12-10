@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "apps.discounts.apps.DiscountsConfig",
     "apps.warehouse.apps.WarehouseConfig",
     "apps.aiassistant.apps.AiassistantConfig",
+    "apps.blogs.apps.BlogsConfig",
 ]
 
 MIDDLEWARE = [

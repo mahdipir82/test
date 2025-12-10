@@ -1,0 +1,64 @@
+{% extends "maintemplate.html" %}
+{% load static %}
+{% block content %}
+<div class="container mx-auto px-4 py-10">
+    <div class="grid md:grid-cols-3 gap-8">
+        <div class="md:col-span-2 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+            <div class="flex items-center justify-between mb-2 text-sm text-gray-500 dark:text-gray-400">
+                <span>{{ product.created_at|date:"Y/m/d" }}</span>
+                <span>میانگین امتیاز: {{ average_rating }}</span>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">{{ product.name }}</h1>
+            {% if product.main_image %}
+                <img src="{{ product.main_image.url }}" alt="{{ product.name }}" class="w-full h-80 object-cover rounded-xl mb-6">
+            {% endif %}
+            <p class="text-gray-700 dark:text-gray-300 leading-7">{{ product.description }}</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+            <h2 class="text-xl font-bold mb-4 text-gray-900 dark:text-white">ثبت نظر و امتیاز</h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">نظر شما پس از تایید ادمین نمایش داده می‌شود.</p>
+            <form method="post" class="space-y-4">
+                {% csrf_token %}
+                {{ form.non_field_errors }}
+                <div>
+                    <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">نام</label>
+                    {{ form.name }}
+                    {{ form.name.errors }}
+                </div>
+                <div>
+                    <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">ایمیل</label>
+                    {{ form.email }}
+                    {{ form.email.errors }}
+                </div>
+                <div>
+                    <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">امتیاز</label>
+                    {{ form.rating }}
+                    {{ form.rating.errors }}
+                </div>
+                <div>
+                    <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">متن نظر</label>
+                    {{ form.comment }}
+                    {{ form.comment.errors }}
+                </div>
+                <button type="submit" class="btn-primary btn-modern px-4 py-2 rounded-xl w-full">ارسال نظر</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 mt-8">
+        <h2 class="text-xl font-bold mb-4 text-gray-900 dark:text-white">نظرات تایید شده</h2>
+        {% for review in reviews %}
+            <div class="border-b border-gray-100 dark:border-gray-700 pb-4 mb-4">
+                <div class="flex items-center justify-between mb-1">
+                    <span class="font-semibold text-gray-900 dark:text-white">{{ review.display_name }}</span>
+                    <span class="text-yellow-500">{{ review.rating }} ⭐</span>
+                </div>
+                <p class="text-gray-700 dark:text-gray-300">{{ review.comment }}</p>
+                <span class="text-xs text-gray-400">{{ review.created_at|date:"Y/m/d" }}</span>
+            </div>
+        {% empty %}
+            <p class="text-gray-500 dark:text-gray-400">هنوز نظری ثبت نشده است.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
