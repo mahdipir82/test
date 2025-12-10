@@ -976,58 +976,12 @@ const iranProvinces = {
     "فارس": ["شیراز", "مرودشت", "کازرون", "داراب"],
     "آذربایجان شرقی": ["تبریز", "مراغه", "مرند"]
 };
-function renderProfile() {
-     // نمایش آدرس‌ها از localStorage
+function renderProfile(addressesFromServer = null) {
     const userAddresses = document.getElementById("userAddresses");
-    const addresses = JSON.parse(localStorage.getItem('userAddresses')) || [];  // خواندن آدرس‌ها از localStorage
-
-    if (userAddresses) {
-        if (addresses.length > 0) {
-            userAddresses.innerHTML = addresses.map(addr => `
-                <div class="bg-gray-100 dark:bg-gray-800 p-3 rounded-xl">
-                    <p class="font-bold">${addr.title || "عنوان ندارد"}</p>
-                    <p class="text-sm">${addr.full_address || "آدرس کامل ندارد"}</p>
-                    <p class="text-sm">${addr.city}, ${addr.province} - کد پستی: ${addr.postal_code}</p>
-                </div>
-            `).join("");
-        } else {
-            userAddresses.innerHTML = `<p class="text-gray-500 dark:text-gray-300">هیچ آدرسی ثبت نشده است.</p>`;
-        }
+    const addresses = addressesFromServer;
+    if (userAddresses && Array.isArray(addresses)) {
+        renderAddresses(addresses);
     }
-
-
-    /* ==========================================================
-       1) نمایش سبد خرید فعلی
-    ========================================================== */
-   // نمایش سبد خرید از localStorage
-    const profileCart = document.getElementById("profileCart");
-    const cart = JSON.parse(localStorage.getItem('cart')) || [];  // خواندن سبد خرید از localStorage
-
-    if (profileCart) {
-        if (cart.length === 0) {
-            profileCart.innerHTML = `
-                <div class="text-center py-6">
-                    <p class="text-gray-500 dark:text-gray-300">سبد خرید فعلی خالی است</p>
-                </div>
-            `;
-        } else {
-            profileCart.innerHTML = cart.map(item => `
-                <div class="flex items-center justify-between bg-gray-100 dark:bg-gray-800 p-3 rounded-xl">
-                    <div>
-                        <p class="font-bold">${item.name}</p>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">${item.price.toLocaleString()} تومان</p>
-                    </div>
-                </div>
-            `).join("") + `
-                <button onclick="finalizeOrder()"
-                    class="btn-primary w-full mt-4 py-3 rounded-xl">
-                    ثبت سفارش نهایی
-                </button>
-            `;
-        }
-    }
-
-
     /* ==========================================================
        2) نمایش لیست خریدهای قبلی
     ========================================================== */
@@ -1157,23 +1111,6 @@ function renderAddresses(addresses) {
     }
 }
 
-function saveAddressesToLocalStorage(addresses) {
-    localStorage.setItem('userAddresses', JSON.stringify(addresses));
-}
-
-function getAddressesFromLocalStorage() {
-    const addresses = localStorage.getItem('userAddresses');
-    return addresses ? JSON.parse(addresses) : [];
-}
-function saveCartToLocalStorage() {
-    localStorage.setItem('cart', JSON.stringify(cart));
-}
-
-function getCartFromLocalStorage() {
-    const cart = localStorage.getItem('cart');
-    return cart ? JSON.parse(cart) : [];
-}
-
 function addAddress() {
     const addressModal = document.createElement('div');
     addressModal.className = 'modal active';
@@ -1243,50 +1180,6 @@ function getCsrfToken() {
     return csrfToken;
 }
 
-function submitAddress(e) {
-    e.preventDefault();
-
-    const title = document.getElementById('addressTitle').value;
-    const province = document.getElementById('addressProvince').value;
-    const city = document.getElementById('addressCity').value;
-    const fullAddress = document.getElementById('addressFull').value;
-    const postal = document.getElementById('addressPostal').value;
-
-    const newAddress = {
-        title: title,
-        province: province,
-        city: city,
-        full_address: fullAddress,
-        postal_code: postal
-    };
-
-    // ارسال آدرس به سرور
-    fetch('/accounts/add_address/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCsrfToken()  // توکن CSRF
-        },
-        body: JSON.stringify(newAddress)
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showNotification('آدرس با موفقیت اضافه شد!', 'success');
-            // پس از اضافه کردن آدرس، آدرس جدید را در localStorage ذخیره می‌کنیم
-            const addresses = JSON.parse(localStorage.getItem('userAddresses')) || [];
-            addresses.push(newAddress);
-            localStorage.setItem('userAddresses', JSON.stringify(addresses));
-            renderProfile();  // به‌روزرسانی پروفایل
-        } else {
-            showNotification(data.message || 'خطا در ارسال درخواست', 'error');
-        }
-    })
-    .catch(error => {
-        console.error('خطا:', error);
-        showNotification('خطا در ارسال درخواست', 'error');
-    });
-}
 
 
 function subscribeNewsletter(e) {

@@ -55,14 +55,34 @@
             </div>
             
             <!-- Current Cart -->
-                   <div class="form-glass p-6 rounded-2xl">
-    <h3 class="text-xl font-bold mb-4 dark:text-white flex items-center gap-3">
-        <span class="text-2xl">🛒</span>سبد خرید فعلی
-    </h3>
+                     <div class="form-glass p-6 rounded-2xl">
+                <h3 class="text-xl font-bold mb-4 dark:text-white flex items-center gap-3">
+                    <span class="text-2xl">🛒</span>سبد خرید فعلی
+                </h3>
 
-    <div id="profileCart" class="space-y-4"></div>
+                <div id="profileCart" class="space-y-4" data-cart='{{ profile_cart_json|default:"[]"|escapejs }}'>
+                    {% if profile_cart_items %}
+                        {% for item in profile_cart_items %}
+                            <div class="flex items-center justify-between bg-gray-100 dark:bg-gray-800 p-3 rounded-xl">
+                                <div>
+                                    <p class="font-bold">{{ item.title|default:item.name|default:"محصول" }}</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">{{ item.price|default:0 }} تومان</p>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-6">
+                            <p class="text-gray-500 dark:text-gray-300">سبد خرید فعلی خالی است</p>
+                        </div>
+                    {% endif %}
+                </div>
 
-</div>
+                <!-- دکمه ثبت سفارش -->
+                <button onclick="finalizeOrder()"
+                        class="btn-primary btn-modern w-full py-3 mt-4 rounded-xl text-center">
+                    ثبت سفارش نهایی
+                </button>
+            </div>
             <!-- Sidebar -->
             <div class="space-y-8">
 

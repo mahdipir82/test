@@ -6,7 +6,8 @@ import utils
 from django.utils import timezone
 from django.views.generic import TemplateView
 from rest_framework.permissions import IsAuthenticated
-from .models import CustomUser,Customer
+from .models import CustomUser,Customer, Address
+import json
 from django.contrib.auth import authenticate,login,logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils import timezone
@@ -425,6 +426,12 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         customer, _ = Customer.objects.get_or_create(user=user)
         context["user_data"] = user
         context["customer_data"] = customer
+        context["user_addresses"] = Address.objects.filter(customer=user)
+
+        session_cart = self.request.session.get("shop_cart", {})
+        cart_items = session_cart.values() if isinstance(session_cart, dict) else session_cart
+        context["profile_cart_items"] = cart_items
+        context["profile_cart_json"] = json.dumps(list(cart_items), ensure_ascii=False)
         return context
 
 
