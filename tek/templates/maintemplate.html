@@ -20,7 +20,15 @@
             darkMode: 'class',
         }
     </script>
-
+<script>
+        // Apply the saved theme before the page renders to avoid flicker
+        (() => {
+            const savedMode = localStorage.getItem('darkMode');
+            if (savedMode === 'true') {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
     <style>
         @view-transition {
             navigation: auto;
@@ -38,6 +46,8 @@
     {% include "partials/mobile_menu.html" %}
     {% block content %}
     {% endblock  %}
+    {% include "partials/ai_support.html" %}
+    {% include "partials/product_modal.html" %}
     {% include "partials/footer.html" %}
     <script>
 function openLoginModal() {

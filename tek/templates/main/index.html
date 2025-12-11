@@ -994,181 +994,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="accessoriesList"></div>
         </div>
     </div>
-    <!-- Product Detail Modal -->
-    <div id="productModal" class="modal">
-        <div class="modal-content p-0 w-full max-w-6xl dark:text-white"><!-- Modal Header -->
-            <div class="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700">
-                <div class="flex items-center gap-4">
-                    <h3 class="text-2xl font-bold" id="modalProductName"></h3>
-                    <div class="rating-stars" id="modalProductRating"><span class="star filled">★</span> <span
-                            class="star filled">★</span> <span class="star filled">★</span> <span
-                            class="star filled">★</span> <span class="star">★</span> <span
-                            class="text-sm text-gray-500 mr-2">(4.2 از 5)</span>
-                    </div>
-                </div><button onclick="closeProductModal()"
-                    class="glass p-2 hover:bg-white/20 rounded-xl transition-all duration-300 text-gray-500 hover:text-gray-700">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M6 18L18 6M6 6l12 12" />
-                    </svg></button>
-            </div>
-            <div class="grid lg:grid-cols-2 gap-8 p-6"><!-- Product Gallery -->
-                <div>
-                    <div class="product-gallery mb-4"><img id="modalProductImage" class="gallery-main rounded-2xl"
-                            alt="" onclick="openImageZoom(this.src)"
-                            onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'400\' height=\'300\' viewBox=\'0 0 400 300\'%3E%3Crect fill=\'%23f0f0f0\' width=\'400\' height=\'300\'/%3E%3Ctext x=\'200\' y=\'150\' font-family=\'Arial\' font-size=\'16\' fill=\'%23666\' text-anchor=\'middle\'%3EImage not available%3C/text%3E%3C/svg%3E'; this.alt='Image failed to load';">
-                        <div class="gallery-thumbs" id="modalProductThumbs">
-                            <!-- Thumbnails will be populated by JavaScript -->
-                        </div>
-                    </div><!-- Product Features -->
-                    <div class="form-glass p-6 rounded-2xl">
-                        <h4 class="font-bold text-lg mb-4 flex items-center gap-2"><span class="text-2xl">⚡</span>
-                            ویژگی‌های کلیدی</h4>
-                        
-                            <div class="flex items-center gap-2"><span class="w-2 h-2 bg-green-500 rounded-full"></span>
-                                <span>گارانتی 2 ساله</span>
-                            </div>
-                            <div class="flex items-center gap-2"><span class="w-2 h-2 bg-green-500 rounded-full"></span>
-                                <span>ارسال رایگان</span>
-                            </div>
-                            <div class="flex items-center gap-2"><span class="w-2 h-2 bg-green-500 rounded-full"></span>
-                                <span>پشتیبانی 24/7</span>
-                            </div>
-                            <div class="flex items-center gap-2"><span class="w-2 h-2 bg-green-500 rounded-full"></span>
-                                <span>بازگشت 7 روزه</span>
-                            </div>
-                        
-                    </div>
-                </div><!-- Product Details -->
-                <div class="space-y-6"><!-- Price Section -->
-                    <div class="form-glass p-6 rounded-2xl">
-                        <div class="flex items-center gap-4 mb-4"><span class="text-4xl font-bold text-[#008B8B]"
-                                id="modalProductPrice"></span> <span class="text-lg text-gray-400 line-through"
-                                id="modalOriginalPrice"></span> <span
-                                class="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold"
-                                id="modalDiscount"></span>
-                        </div>
-                        <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                            <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewbox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M5 13l4 4L19 7" />
-                            </svg><span>موجود در انبار</span> <span class="text-orange-500 font-medium"
-                                id="modalStock">تنها 5 عدد باقی مانده!</span>
-                        </div>
-                    </div><!-- Product Tabs -->
-                    <div class="form-glass p-6 rounded-2xl">
-                        <div class="product-tabs"><button class="tab-button active"
-                                onclick="switchTab('specs')">مشخصات</button> <button class="tab-button"
-                                onclick="switchTab('colors')">رنگ‌ها</button> <button class="tab-button"
-                                onclick="switchTab('warranty')">گارانتی</button>
-                        </div><!-- Specifications Tab -->
-                        <div class="tab-content active" id="specsTab">
-                            </select>
-                            <div class="mt-4 grid grid-cols-2 gap-4 text-sm">
-                                
-                                <div class="grid grid-cols-2 gap-4 text-sm" id="modalProductFeatures">
-                            </div>
-                            </div>
-                        </div><!-- Colors Tab -->
-                        <div class="tab-content" id="colorsTab"><label class="block font-bold mb-3">انتخاب رنگ:</label>
-                            <div>
-    <div id="productColorOptions" class="flex gap-2">
-        <!-- دایره‌های رنگ با JS اینجا اضافه می‌شوند -->
-    </div>
-     <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">
-        رنگ انتخابی: <span id="selectedColor" class="font-medium"></span>
-    </p>
-</div>
-                        </div><!-- Warranty Tab -->
-                        <div class="tab-content" id="warrantyTab">
-                            <div class="space-y-4">
-                                <div class="flex items-start gap-3">
-                                    <svg class="w-5 h-5 text-green-500 mt-1" fill="none" stroke="currentColor"
-                                        viewbox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    <div>
-                                        <h5 class="font-medium">گارانتی 24 ماهه</h5>
-                                        <p class="text-sm text-gray-600 dark:text-gray-400">شامل تعمیرات و تعویض قطعات
-                                        </p>
-                                    </div>
-                                </div>
-                                <div class="flex items-start gap-3">
-                                    <svg class="w-5 h-5 text-green-500 mt-1" fill="none" stroke="currentColor"
-                                        viewbox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    <div>
-                                        <h5 class="font-medium">خدمات پس از فروش</h5>
-                                        <p class="text-sm text-gray-600 dark:text-gray-400">پشتیبانی فنی رایگان</p>
-                                    </div>
-                                </div>
-                                <div class="flex items-start gap-3">
-                                    <svg class="w-5 h-5 text-green-500 mt-1" fill="none" stroke="currentColor"
-                                        viewbox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    <div>
-                                        <h5 class="font-medium">بازگشت کالا</h5>
-                                        <p class="text-sm text-gray-600 dark:text-gray-400">امکان بازگشت تا 7 روز</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div><!-- Discount Code -->
-                    <div class="form-glass p-6 rounded-2xl"><label class="block font-bold mb-3 flex items-center gap-2">
-                            <span class="text-xl">🎫</span> کد تخفیف </label>
-                        <div class="flex gap-3"><input type="text" id="discountCode" placeholder="کد تخفیف را وارد کنید"
-                                class="input-glass flex-1 px-4 py-3 rounded-xl focus:outline-none text-sm dark:text-white dark:placeholder-gray-400">
-                            <button onclick="applyDiscount()"
-                                class="btn-primary btn-modern px-6 py-3 rounded-xl font-medium">اعمال</button>
-                        </div>
-                        <div class="mt-3 flex flex-wrap gap-2"><span
-                                class="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 rounded-full text-xs cursor-pointer"
-                                onclick="document.getElementById('discountCode').value='TECH20'">TECH20</span> <span
-                                class="bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-3 py-1 rounded-full text-xs cursor-pointer"
-                                onclick="document.getElementById('discountCode').value='SAVE15'">SAVE15</span> <span
-                                class="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-1 rounded-full text-xs cursor-pointer"
-                                onclick="document.getElementById('discountCode').value='NEW10'">NEW10</span>
-                        </div>
-                    </div><!-- Quantity & Add to Cart -->
-                    <div class="form-glass p-6 rounded-2xl">
-                        <div class="flex items-center gap-4 mb-4"><label class="font-bold">تعداد:</label>
-                            <div class="flex items-center gap-3"><button onclick="changeQuantity(-1)"
-                                    class="glass w-10 h-10 rounded-xl flex items-center justify-center hover:bg-white/20 transition-all">-</button>
-                                <span class="font-bold text-lg w-8 text-center" id="productQuantity">1</span> <button
-                                    onclick="changeQuantity(1)"
-                                    class="glass w-10 h-10 rounded-xl flex items-center justify-center hover:bg-white/20 transition-all">+</button>
-                            </div>
-                        </div>
-                        <div class="flex gap-3"><button onclick="addToCartFromModal()"
-                                class="btn-primary btn-modern flex-1 py-4 rounded-xl text-lg font-bold flex items-center justify-center gap-2">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                                </svg> افزودن به سبد خرید </button> <button onclick="addToWishlist()"
-                                class="glass p-4 rounded-xl hover:bg-white/20 transition-all">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                                </svg></button>
-                        </div>
-                    </div>
-                </div>
-            </div><!-- Reviews Section -->
-            <div class="border-t border-gray-200 dark:border-gray-700 p-6">
-                <div class="flex justify-between items-center mb-6">
-                    <h4 class="font-bold text-xl flex items-center gap-2"><span class="text-2xl">💬</span> نظرات کاربران
-                    </h4><button onclick="openReviewModal()"
-                        class="btn-primary btn-modern px-4 py-2 rounded-xl text-sm">نظر جدید</button>
-                </div>
-                <div id="modalProductReviews" class="space-y-4"></div>
-            </div>
-        </div>
-    </div><!-- Image Zoom Modal -->
+    <!-- Image Zoom Modal -->
     <div id="imageZoomModal" class="modal">
         <div class="flex items-center justify-center w-full h-full p-4">
             <div class="relative max-w-4xl max-h-full"><img id="zoomedImage"
@@ -1199,6 +1025,6 @@
      {% include "accounts_app/login.html" %}
     
     
-    {% include "partials/ai_support.html" %}
+    
     
 {% endblock  %}
