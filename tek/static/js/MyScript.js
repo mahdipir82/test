@@ -1940,7 +1940,7 @@ async function viewProduct(id) {
         originalPriceEl.textContent = `${currentProduct.originalPrice.toLocaleString()} تومان`;
         originalPriceEl.style.display = 'inline-block';
 
-        cpriceEl.textContent = `${currentProduct.finalPrice.toLocaleString()} تومان`;
+        priceEl.textContent = `${currentProduct.finalPrice.toLocaleString()} تومان`;
 
         const percent = Math.round((currentProduct.discount / currentProduct.originalPrice) * 100);
         discountEl.textContent = `${percent}% تخفیف`;
