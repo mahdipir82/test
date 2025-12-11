@@ -1,0 +1,95 @@
+{% extends "maintemplate.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-12">
+    <div class="grid lg:grid-cols-3 gap-12">
+        <article class="lg:col-span-2 form-glass rounded-3xl overflow-hidden">
+            <div class="relative">
+                {% if post.cover_image %}
+                    <img src="{{ post.cover_image.url }}" alt="{{ post.title }}" class="w-full h-72 object-cover">
+                {% else %}
+                    <img src="https://placehold.co/800x400/edf2f7/334155?text=Blog" alt="{{ post.title }}" class="w-full h-72 object-cover">
+                {% endif %}
+                <div class="absolute top-4 right-4 bg-[#008B8B] text-white px-4 py-2 rounded-full text-sm font-bold">
+                    {{ post.created_at|date:"Y/m/d" }}
+                </div>
+            </div>
+
+            <div class="p-8">
+                <h1 class="text-4xl font-bold mb-4 dark:text-white">{{ post.title }}</h1>
+                <div class="flex items-center gap-4 text-sm text-gray-500 mb-6">
+                    <span>میانگین امتیاز: {{ post.average_rating }}</span>
+                    <span>تعداد نظرات تایید شده: {{ approved_comments.count }}</span>
+                </div>
+                <div class="prose max-w-none dark:prose-invert leading-relaxed">
+                    {{ post.content|safe }}
+                </div>
+            </div>
+        </article>
+
+        <aside class="space-y-8">
+            <div class="form-glass rounded-2xl p-6">
+                <h3 class="text-2xl font-bold mb-4 dark:text-white">ارسال نظر</h3>
+                <p class="text-sm text-gray-500 mb-4">نظر شما پس از تایید ادمین نمایش داده می‌شود.</p>
+                <form method="post" class="space-y-4">
+                    {% csrf_token %}
+                    {% if form.errors %}
+                        <div class="bg-red-100 text-red-700 p-3 rounded-lg text-sm">
+                            لطفا خطاهای زیر را برطرف کنید.
+                        </div>
+                    {% endif %}
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div>
+                            {{ form.name.label_tag }}
+                            {{ form.name }}
+                            {{ form.name.errors }}
+                        </div>
+                        <div>
+                            {{ form.email.label_tag }}
+                            {{ form.email }}
+                            {{ form.email.errors }}
+                        </div>
+                    </div>
+                    <div>
+                        {{ form.rating.label_tag }}
+                        {{ form.rating }}
+                        {{ form.rating.errors }}
+                    </div>
+                    <div>
+                        {{ form.content.label_tag }}
+                        {{ form.content }}
+                        {{ form.content.errors }}
+                    </div>
+                    <button type="submit" class="btn-primary btn-modern w-full py-3 rounded-xl">ثبت نظر</button>
+                </form>
+            </div>
+
+            <div class="form-glass rounded-2xl p-6">
+                <h3 class="text-2xl font-bold mb-4 dark:text-white">نظرات کاربران</h3>
+                <div class="space-y-4">
+                    {% for comment in approved_comments %}
+                        <div class="bg-white/70 dark:bg-slate-800/70 rounded-xl p-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 bg-gradient-to-r from-[#008B8B] to-[#006666] rounded-full flex items-center justify-center text-white font-bold">
+                                        {{ comment.display_name|first|default:"م" }}
+                                    </div>
+                                    <div>
+                                        <p class="font-semibold dark:text-white">{{ comment.display_name }}</p>
+                                        <p class="text-xs text-gray-500">{{ comment.created_at|date:"Y/m/d" }}</p>
+                                    </div>
+                                </div>
+                                <div class="text-sm text-amber-500">امتیاز: {{ comment.rating }}</div>
+                            </div>
+                            <p class="text-gray-700 dark:text-gray-300 leading-relaxed">{{ comment.content }}</p>
+                        </div>
+                    {% empty %}
+                        <p class="text-gray-500">هنوز نظری ثبت نشده است.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </aside>
+    </div>
+</div>
+{% endblock %}

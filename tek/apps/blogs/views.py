@@ -1,9 +1,65 @@
-from django.db.models import Avg, Count, Q
+from django.contrib import messages
+from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
+from .forms import BlogCommentForm
+from .models import BlogPost
 
 
 def post_list(request):
-    return render(request, 'blogs_app/post_list.html')
+    posts = (
+        BlogPost.objects.filter(is_published=True)
+        .annotate(approved_comments=Count('comments', filter=Q(comments__is_approved=True)))
+        .order_by('-created_at')
+    )
+
+    featured_post = posts.first()
+    other_posts = posts[1:] if featured_post else posts
+
+    return render(
+        request,
+        'blogs_app/post_list.html',
+        {'featured_post': featured_post, 'posts': other_posts},
+    )
+
 
 def about(request):
     return render(request, 'blogs_app/about.html')
+
+
+def post_detail(request, slug):
+    post = get_object_or_404(BlogPost, slug=slug, is_published=True)
+    approved_comments = post.comments.filter(is_approved=True)
+
+    if request.method == 'POST':
+        form = BlogCommentForm(request.POST)
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.post = post
+            if request.user.is_authenticated:
+                comment.user = request.user
+                if not comment.name:
+                    comment.name = request.user.get_full_name() or request.user.username
+                if not comment.email:
+                    comment.email = request.user.email
+            comment.is_approved = False
+            comment.save()
+            messages.success(request, 'نظر شما پس از تایید ادمین نمایش داده خواهد شد.')
+            return redirect('blogs:post_detail', slug=post.slug)
+    else:
+        initial = {}
+        if request.user.is_authenticated:
+            initial = {
+                'name': request.user.get_full_name() or request.user.username,
+                'email': request.user.email,
+            }
+        form = BlogCommentForm(initial=initial)
+
+    return render(
+        request,
+        'blogs_app/post_detail.html',
+        {
+            'post': post,
+            'form': form,
+            'approved_comments': approved_comments,
+        },
+    )
