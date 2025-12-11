@@ -4,7 +4,21 @@
 {% block content %}
 <div class="container mx-auto px-4 py-12">
     <div class="grid lg:grid-cols-3 gap-12">
-        <article class="lg:col-span-2 form-glass rounded-3xl overflow-hidden">
+           <article
+            class="lg:col-span-2 form-glass rounded-3xl overflow-hidden"
+            data-blog-article="true"
+            data-blog-title="{{ post.title }}"
+            data-blog-slug="{{ post.slug }}"
+            data-blog-date="{{ post.created_at|date:'Y/m/d' }}"
+            data-blog-rating="{{ post.average_rating }}"
+            data-blog-comments="{{ approved_comments.count }}"
+            data-blog-excerpt="{{ post.content|striptags|truncatechars:220 }}"
+            {% if post.cover_image %}
+                data-blog-cover="{{ post.cover_image.url }}"
+            {% else %}
+                data-blog-cover="https://placehold.co/800x400/edf2f7/334155?text=Blog"
+            {% endif %}
+        >
             <div class="relative">
                 {% if post.cover_image %}
                     <img src="{{ post.cover_image.url }}" alt="{{ post.title }}" class="w-full h-72 object-cover">
@@ -22,7 +36,7 @@
                     <span>میانگین امتیاز: {{ post.average_rating }}</span>
                     <span>تعداد نظرات تایید شده: {{ approved_comments.count }}</span>
                 </div>
-                <div class="prose max-w-none dark:prose-invert leading-relaxed">
+                <div class="prose max-w-none dark:prose-invert leading-relaxed" data-blog-content>
                     {{ post.content|safe }}
                 </div>
             </div>

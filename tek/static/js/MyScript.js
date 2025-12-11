@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded", function () {
     currentUser = JSON.parse(localStorage.getItem("currentUser"));
     updateAuthButtons(currentUser);
     renderBlogPosts();
+    initBlogModalTriggers();
 });
 let cart = [];
 let currentUser = null;
@@ -220,7 +221,7 @@ function updateFeaturedBlogPost(post) {
     featuredExcerpt.textContent = post.excerpt;
     featuredAuthorInitial.textContent = post.author.charAt(0);
     featuredAuthorName.textContent = post.author;
-    featuredButton.onclick = () => openBlogPost(post.id);
+    featuredButton.onclick = () => openBlogPost(post);
 }
 
 function renderBlogPosts() {
@@ -264,6 +265,7 @@ function renderBlogPosts() {
     if (loadMoreBtn) {
         loadMoreBtn.style.display = displayedBlogPosts >= filteredPosts.length ? 'none' : 'inline-flex';
     }
+    initBlogModalTriggers();
 }
 
 function getCategoryName(category) {
@@ -305,9 +307,105 @@ function loadMoreBlogPosts() {
     }
 }
 
-function openBlogPost(postId) {
-    const post = blogPosts.find(p => p.id === postId);
-    if (!post) return;
+function buildBlogMetaText(post) {
+    const metaParts = [];
+
+    if (post.date) {
+        metaParts.push(post.date);
+    }
+
+    if (post.rating) {
+        metaParts.push(`امتیاز: ${post.rating}`);
+    }
+
+    metaParts.push(`${post.comments ?? 0} نظر`);
+    return metaParts.join(' • ');
+}
+
+async function handleBlogModalTrigger(event) {
+    event.preventDefault();
+    const trigger = event.currentTarget;
+    const fallbackData = getBlogDataFromTrigger(trigger);
+
+    const remotePost = await fetchBlogPostContent(fallbackData.modalUrl);
+    openBlogPost(remotePost || fallbackData);
+}
+
+function initBlogModalTriggers() {
+    const triggers = document.querySelectorAll('[data-blog-modal="true"]');
+
+    triggers.forEach(trigger => {
+        trigger.removeEventListener('click', handleBlogModalTrigger);
+        trigger.addEventListener('click', handleBlogModalTrigger);
+    });
+}
+
+function getBlogDataFromTrigger(trigger) {
+    const dataset = trigger.dataset || {};
+    const title = dataset.blogTitle || trigger.querySelector('h4')?.textContent?.trim() || '';
+
+    return {
+        id: dataset.blogSlug || dataset.blogId || title,
+        title,
+        date: dataset.blogDate || '',
+        excerpt: dataset.blogExcerpt || '',
+        image: dataset.blogCover || trigger.querySelector('img')?.src || '',
+        comments: dataset.blogComments || 0,
+        rating: dataset.blogRating || '',
+        modalUrl: dataset.blogModalUrl || trigger.getAttribute('href') || '',
+    };
+}
+
+async function fetchBlogPostContent(url) {
+    if (!url) return null;
+
+    try {
+        const response = await fetch(url, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+
+        if (!response.ok) return null;
+
+        const html = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const article = doc.querySelector('[data-blog-article]');
+
+        if (!article) return null;
+
+        const content = article.querySelector('[data-blog-content]');
+
+        return {
+            id: article.dataset.blogSlug || article.dataset.blogTitle,
+            title: article.dataset.blogTitle || '',
+            date: article.dataset.blogDate || '',
+            image: article.dataset.blogCover || article.querySelector('img')?.src || '',
+            excerpt: article.dataset.blogExcerpt || '',
+            comments: article.dataset.blogComments || 0,
+            rating: article.dataset.blogRating || '',
+            content: content ? content.innerHTML : article.innerHTML,
+        };
+    } catch (error) {
+        console.error('خطا در بارگذاری محتوای مقاله', error);
+        return null;
+    }
+}
+
+function openBlogPost(postOrId) {
+    const resolvedPost = (typeof postOrId === 'object' && postOrId !== null)
+        ? postOrId
+        : blogPosts.find(p => p.id === postOrId);
+
+    if (!resolvedPost) return;
+
+    const placeholderImage = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="800" height="300" viewBox="0 0 800 300"%3E%3Crect fill="%23008B8B" width="800" height="300"/%3E%3Ctext x="400" y="160" font-family="Arial" font-size="32" fill="white" text-anchor="middle"%3EBlog Article%3C/text%3E%3C/svg%3E';
+    const imageSrc = resolvedPost.image || placeholderImage;
+    const authorName = resolvedPost.author || resolvedPost.title || '';
+    const authorInitial = authorName ? authorName.charAt(0) : '?';
+    const metaText = buildBlogMetaText(resolvedPost);
+    const articleContent = resolvedPost.content || resolvedPost.excerpt || '';
+    const categoryLabel = resolvedPost.category ? getCategoryName(resolvedPost.category) : '';
+    const commentsText = resolvedPost.comments ?? 0;
 
     const blogModal = document.createElement('div');
     blogModal.className = 'modal active';
@@ -315,46 +413,30 @@ function openBlogPost(postId) {
         <div class="modal-content p-0 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
           <div class="form-glass rounded-2xl">
             <div class="relative">
-              <img src="${post.image}" alt="${post.title}" class="w-full h-64 object-cover rounded-t-2xl" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'800\' height=\'300\' viewBox=\'0 0 800 300\'%3E%3Crect fill=\'%23008B8B\' width=\'800\' height=\'300\'/%3E%3Ctext x=\'400\' y=\'160\' font-family=\'Arial\' font-size=\'32\' fill=\'white\' text-anchor=\'middle\'%3EBlog Article%3C/text%3E%3C/svg%3E'; this.alt='Image failed to load';">
+               <img src="${imageSrc}" alt="${resolvedPost.title || ''}" class="w-full h-64 object-cover rounded-t-2xl" onerror="this.src='${placeholderImage}'; this.alt='Image failed to load';">
               <button onclick="closeBlogPost()" class="absolute top-4 left-4 glass p-3 rounded-xl text-white hover:bg-white/20 transition-all">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                 </svg>
               </button>
-              <div class="absolute bottom-4 right-4 bg-[#008B8B] text-white px-4 py-2 rounded-full text-sm font-bold">${getCategoryName(post.category)}</div>
+           ${categoryLabel ? `<div class="absolute bottom-4 right-4 bg-[#008B8B] text-white px-4 py-2 rounded-full text-sm font-bold">${categoryLabel}</div>` : ''}
             </div>
             
             <div class="p-8">
               <div class="flex items-center gap-4 mb-6">
                 <div class="w-12 h-12 bg-gradient-to-r from-[#008B8B] to-[#006666] rounded-full flex items-center justify-center text-white text-lg font-bold">
-                  ${post.author.charAt(0)}
+                  ${authorInitial}
                 </div>
                 <div>
-                  <p class="font-bold dark:text-white">${post.author}</p>
-                  <p class="text-sm text-gray-500">${post.date} • ${post.comments} نظر</p>
+                  <p class="font-bold dark:text-white">${authorName}</p>
+                  <p class="text-sm text-gray-500">${metaText}</p>
                 </div>
               </div>
               
-              <h1 class="text-4xl font-bold mb-6 dark:text-white leading-tight">${post.title}</h1>
+                 <h1 class="text-4xl font-bold mb-6 dark:text-white leading-tight">${resolvedPost.title || ''}</h1>
               
-              <div class="prose prose-lg max-w-none dark:prose-invert">
-                <p class="text-xl text-gray-600 dark:text-gray-400 mb-8 leading-relaxed">${post.excerpt}</p>
-                
-                <p class="mb-6">در دنیای امروز که تکنولوژی با سرعت نور در حال پیشرفت است، انتخاب درست محصولات تکنولوژی اهمیت بسیاری دارد. در این مقاله سعی کرده‌ایم تا جامع‌ترین راهنما را برای شما فراهم کنیم.</p>
-                
-                <h2 class="text-2xl font-bold mb-4 dark:text-white">نکات کلیدی</h2>
-                <ul class="mb-6">
-                  <li>بررسی نیازهای شخصی قبل از خرید</li>
-                  <li>مقایسه مشخصات فنی محصولات</li>
-                  <li>در نظر گیری بودجه و ارزش خرید</li>
-                  <li>بررسی نظرات کاربران و متخصصان</li>
-                </ul>
-                
-                <p class="mb-6">یکی از مهم‌ترین عواملی که باید در نظر بگیرید، تناسب محصول با نیازهای واقعی شماست. خرید بر اساس هیجان یا تبلیغات ممکن است منجر به انتخاب نادرست شود.</p>
-                
-                <h2 class="text-2xl font-bold mb-4 dark:text-white">نتیجه‌گیری</h2>
-                <p class="mb-6">با در نظر گیری نکات ذکر شده در این مقاله، می‌توانید بهترین انتخاب را برای خرید محصول مورد نظرتان داشته باشید. همیشه به یاد داشته باشید که تحقیق و مطالعه قبل از خرید، بهترین سرمایه‌گذاری است.</p>
-              </div>
+               ${resolvedPost.excerpt ? `<p class="text-lg text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">${resolvedPost.excerpt}</p>` : ''}
+              <div class="prose prose-lg max-w-none dark:prose-invert">${articleContent}</div>
               
               <div class="border-t pt-6 mt-8">
                 <div class="flex items-center justify-between">
@@ -372,14 +454,18 @@ function openBlogPost(postId) {
                       اشتراک‌گذاری
                     </button>
                   </div>
-                  <span class="text-sm text-gray-500">${post.comments} نظر</span>
+                  <span class="text-sm text-gray-500">${commentsText} نظر</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
       `;
-
+     blogModal.addEventListener('click', (event) => {
+        if (event.target === blogModal) {
+            closeBlogPost();
+        }
+    });
     document.body.appendChild(blogModal);
 }
 

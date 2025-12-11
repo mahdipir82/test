@@ -41,7 +41,24 @@
                                     <p class="text-sm text-gray-500">تاریخ انتشار: {{ featured_post.created_at|date:"Y/m/d" }}</p>
                                 </div>
                             </div>
-                              <a href="{{ featured_post.get_absolute_url }}" class="btn-primary btn-modern px-6 py-3 rounded-xl">مطالعه مقاله</a>
+                                 <a
+                                  href="{{ featured_post.get_absolute_url }}"
+                                  class="btn-primary btn-modern px-6 py-3 rounded-xl blog-modal-trigger"
+                                  data-blog-modal="true"
+                                  data-blog-modal-url="{{ featured_post.get_absolute_url }}"
+                                  data-blog-title="{{ featured_post.title }}"
+                                  data-blog-date="{{ featured_post.created_at|date:"Y/m/d" }}"
+                                  data-blog-excerpt="{{ featured_post.content|striptags|truncatechars:220 }}"
+                                  data-blog-rating="{{ featured_post.average_rating }}"
+                                  data-blog-comments="{{ featured_post.approved_comments }}"
+                                  {% if featured_post.cover_image %}
+                                      data-blog-cover="{{ featured_post.cover_image.url }}"
+                                  {% else %}
+                                      data-blog-cover="https://placehold.co/800x500/edf2f7/334155?text=Blog"
+                                  {% endif %}
+                              >
+                                  مطالعه مقاله
+                              </a>
                         </div>
                          </div>
                 </div>
