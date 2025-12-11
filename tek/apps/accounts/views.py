@@ -432,6 +432,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         cart_items = session_cart.values() if isinstance(session_cart, dict) else session_cart
         context["profile_cart_items"] = cart_items
         context["profile_cart_json"] = json.dumps(list(cart_items), ensure_ascii=False)
+        context["hide_cart_button"] = True
         return context
 
 

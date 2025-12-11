@@ -1,0 +1,54 @@
+:root {
+    --ts-primary: #008B8B;
+    --ts-dark: #0f172a;
+    --ts-light: #f8fafc;
+}
+
+body.login {
+    background: linear-gradient(135deg, rgba(0,139,139,0.12), rgba(0,102,102,0.25));
+}
+
+#header {
+    background: linear-gradient(90deg, var(--ts-primary), #006666);
+    color: #fff;
+    box-shadow: 0 8px 24px rgba(0, 139, 139, 0.25);
+}
+
+#header a:link, #header a:visited {
+    color: #fff;
+    font-weight: 700;
+}
+
+#content {
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 24px;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.05);
+}
+
+.breadcrumbs {
+    background: #e6fffa;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 139, 139, 0.2);
+    color: #065f5f;
+}
+
+.module h2, .module caption, .inline-group h2 {
+    background: linear-gradient(90deg, rgba(0,139,139,0.9), rgba(0,102,102,0.85));
+    color: #fff;
+}
+
+.submit-row input.default {
+    background: var(--ts-primary);
+    border: none;
+    box-shadow: 0 6px 20px rgba(0, 139, 139, 0.35);
+}
+
+.submit-row input.default:hover {
+    background: #006666;
+}
+
+.dashboard #content-main .module {
+    border-radius: 14px;
+    border: 1px solid rgba(0, 139, 139, 0.12);
+}

@@ -3,8 +3,13 @@ from django.shortcuts import get_object_or_404, redirect, render
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.permissions import AllowAny
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from django.http import JsonResponse
+from .serializers import ProductReviewSerializer, ProductReviewCreateSerializer
 from .forms import ProductReviewForm
-from .models import Brand, Category, Product
+from .models import Brand, Category, Product, ProductReview
 from .serializers import BrandSerializer, CategorySerializer, ProductSerializer
 
 
@@ -29,10 +34,48 @@ class ProductViewSet(viewsets.ModelViewSet):
 class ProductListAPIView(APIView):
     def get(self, request):
         products = Product.objects.all()
-        serializer = ProductSerializer(products, many=True)
+        serializer = ProductSerializer(products, many=True, context={"request": request})
         return Response(serializer.data)
     
+@method_decorator(csrf_exempt, name="dispatch")
+class ProductReviewAPIView(APIView):
+    permission_classes = [AllowAny]
 
+    def get(self, request, slug):
+        product = get_object_or_404(Product, slug=slug, is_active=True)
+        reviews = product.approved_reviews.order_by("-created_at")
+        serializer = ProductReviewSerializer(reviews, many=True)
+        return JsonResponse(
+            {
+                "reviews": serializer.data,
+                "average_rating": product.average_rating,
+                "review_count": reviews.count(),
+            }
+        )
+
+    def post(self, request, slug):
+        product = get_object_or_404(Product, slug=slug, is_active=True)
+        data = request.POST or request.data if hasattr(request, "data") else {}
+        serializer = ProductReviewCreateSerializer(data=data)
+        if serializer.is_valid():
+            ProductReview.objects.create(
+                product=product,
+                name=serializer.validated_data["name"],
+                email=serializer.validated_data.get("email"),
+                rating=serializer.validated_data["rating"],
+                comment=serializer.validated_data["comment"],
+                user=request.user if request.user.is_authenticated else None,
+            )
+            return JsonResponse(
+                {
+                    "message": "نظر شما ثبت شد و پس از تایید نمایش داده می‌شود.",
+                    "average_rating": product.average_rating,
+                    "review_count": product.approved_reviews.count(),
+                },
+                status=201,
+            )
+
+        return JsonResponse(serializer.errors, status=400)
 def laptops_page(request):
     products = Product.objects.filter(
         categories__slug="lt",

@@ -54,15 +54,15 @@ function renderProductSection(elementId, productList) {
             </div>
 
             <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">موجودی: ${product.stock_quantity || 0} عدد</p>
-
+             ${isOutOfStock ? '<div class="text-center text-red-600 font-bold">ناموجود</div>' : `
             <div class="flex gap-2">
-               <button type="button" onclick="viewProduct('${product.id}')" class="flex-1 text-center bg-white/70 dark:bg-gray-700/70 hover:bg-white dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 px-3 py-2 rounded-lg transition-all duration-300 text-sm font-medium backdrop-blur-sm ${isOutOfStock ? 'pointer-events-none opacity-60' : ''}" ${isOutOfStock ? 'disabled' : ''}>
+                <button type="button" onclick="viewProduct('${product.id}')" class="flex-1 text-center bg-white/70 dark:bg-gray-700/70 hover:bg-white dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 px-3 py-2 rounded-lg transition-all duration-300 text-sm font-medium backdrop-blur-sm">
                 مشاهده
                 </button>
               <button onclick="addToCart('${product.id}')" class="flex-1 ${buttonClass} px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 shadow-md hover:shadow-lg" ${isOutOfStock ? 'disabled opacity-50 cursor-not-allowed' : ''}>
                 افزودن
               </button>
-            </div>
+            </div>`}
           </div>
         </div>
         `;

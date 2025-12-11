@@ -135,6 +135,18 @@ class Product(models.Model):
         """در آینده از اپ discounts صدا زده می‌شود"""
         return self.price
 
+    @property
+    def approved_reviews(self):
+        return self.reviews.filter(is_approved=True)
+
+    @property
+    def average_rating(self):
+        approved = self.approved_reviews
+        if not approved.exists():
+            return 0
+        return round(approved.aggregate(models.Avg('rating'))['rating__avg'] or 0, 1)
+
+    
     class Meta:
         verbose_name = 'کالا'
         verbose_name_plural = 'کالاها'

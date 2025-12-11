@@ -37,16 +37,15 @@ function renderProductSection(elementId, productList) {
                 <h4 class="font-bold mb-3 text-lg dark:text-white">${product.name}</h4>
 
                 <span class="${priceColor} font-bold text-xl">${product.originalPrice} تومان</span>
-
+                ${(product.stock_quantity && product.stock_quantity > 0) ? `
                 <div class="flex gap-2 mt-4">
-                     ${(!product.stock_quantity || product.stock_quantity <= 0) ? '<span class="block text-sm text-red-500 mt-1">ناموجود</span>' : ''}
-                     <button type="button" onclick="viewProduct('${product.id}')" class="flex-1 text-center bg-gray-100 dark:bg-gray-700 px-3 py-2 rounded-lg ${(!product.stock_quantity || product.stock_quantity <= 0) ? 'opacity-60 cursor-not-allowed' : ''}" ${(!product.stock_quantity || product.stock_quantity <= 0) ? 'disabled' : ''}>
+                      <button type="button" onclick="viewProduct('${product.id}')" class="flex-1 text-center bg-gray-100 dark:bg-gray-700 px-3 py-2 rounded-lg">
                         مشاهده
                     </button>
-                    <button onclick="addToCart('${product.id}')" class="flex-1 ${buttonClass} px-3 py-2 rounded-lg" ${(!product.stock_quantity || product.stock_quantity <= 0) ? 'disabled opacity-50 cursor-not-allowed' : ''}>
+                   <button onclick="addToCart('${product.id}')" class="flex-1 ${buttonClass} px-3 py-2 rounded-lg">
                         افزودن
                     </button>
-                </div>
+                </div>` : '<div class="text-center text-red-600 font-bold mt-4">ناموجود</div>'}
             </div>
         </div>
     `).join('');

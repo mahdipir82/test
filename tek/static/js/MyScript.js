@@ -9,11 +9,31 @@ let cart = [];
 let currentUser = null;
 let currentPage = 'home';
 let currentProduct = null;
+let currentProductReviews = [];
 let authMode = 'login';
-let products = {}; 
+let products = {};
 let organizedProducts = {}; 
 const blogPosts = [];
 // Sample Products Data
+function buildStarIcons(rating = 0) {
+    const fullStars = Math.floor(rating);
+    const halfStar = rating % 1 >= 0.5 ? 1 : 0;
+    const emptyStars = 5 - fullStars - halfStar;
+
+    return `${'★'.repeat(fullStars)}${halfStar ? '☆' : ''}${'☆'.repeat(emptyStars)}`;
+}
+
+function renderRatingMarkup(rating = 0, count = 0) {
+    const safeRating = Number(rating) || 0;
+    const safeCount = Number(count) || 0;
+    const stars = buildStarIcons(safeRating);
+    return `
+        <div class="flex items-center gap-2 text-yellow-400">
+            <span class="text-lg">${stars}</span>
+            <span class="text-xs text-gray-500">${safeRating.toFixed(1)} (${safeCount} نظر)</span>
+        </div>
+    `;
+}
 
 
 // تفکیک محصولات بر اساس دسته‌ها و ویژگی‌ها
@@ -152,6 +172,7 @@ function renderProductSection(elementId, productList) {
         hoverEffect = 'hover:shadow-xl hover:shadow-green-500/30 hover:scale-105';
     }
     container.innerHTML = productList.map(product => {
+        const ratingMarkup = renderRatingMarkup(product.average_rating, product.review_count);
         const hasDiscount = product.discount && product.discount > 0;
         const isLowStock = product.stock_quantity && product.stock_quantity < 5;
         const isOutOfStock = !product.stock_quantity || product.stock_quantity <= 0;
@@ -178,15 +199,15 @@ function renderProductSection(elementId, productList) {
 
             <div class="flex items-center justify-between mb-4">
               <p class="text-sm text-gray-600 dark:text-gray-400">موجودی: ${product.stock_quantity || 0} عدد</p>
-              <div class="flex text-yellow-400">
-                ${'★'.repeat(5)}
-              </div>
+               ${ratingMarkup}
             </div>
 
-            <div class="flex gap-2">
-              <button onclick="viewProduct('${product.id}')" class="flex-1 bg-white/70 dark:bg-gray-700/70 hover:bg-white dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 px-3 py-2 rounded-lg transition-all duration-300 text-sm font-medium backdrop-blur-sm" ${isOutOfStock ? 'disabled' : ''}>مشاهده</button>
-              <button onclick="addToCart('${product.id}')" class="flex-1 ${buttonClass} px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 shadow-md hover:shadow-lg" ${isOutOfStock ? 'disabled opacity-50 cursor-not-allowed' : ''}>افزودن</button>
-            </div>
+            ${isOutOfStock
+                ? '<div class="text-center text-red-600 font-bold">ناموجود</div>'
+                : `<div class="flex gap-2">
+                    <button onclick="viewProduct('${product.id}')" class="flex-1 bg-white/70 dark:bg-gray-700/70 hover:bg-white dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 px-3 py-2 rounded-lg transition-all duration-300 text-sm font-medium backdrop-blur-sm">مشاهده</button>
+                    <button onclick="addToCart('${product.id}')" class="flex-1 ${buttonClass} px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 shadow-md hover:shadow-lg">افزودن</button>
+                  </div>`}
           </div>
         </div>
         `;
@@ -709,6 +730,7 @@ function removeFromCart(id) {
 
 function updateCartBadge() {
     const badge = document.getElementById("cartBadge");
+     if (!badge) return;
     const totalItems = cart.reduce((s, i) => s + i.quantity, 0);
     badge.textContent = totalItems;
 }
@@ -1497,12 +1519,22 @@ function handleSearch(query, source = 'desktop') {
     }
 
     searchTimeout = setTimeout(() => {
-        const allProducts = [...products.laptops, ...products.computers, ...products.accessories];
-        const results = allProducts.filter(p =>
-            p.name.toLowerCase().includes(query.toLowerCase()) ||
-            p.description.toLowerCase().includes(query.toLowerCase()) ||
-            p.category.toLowerCase().includes(query.toLowerCase())
-        ).slice(0, 8);
+        const allProducts = [
+            ...(products?.laptops || []),
+            ...(products?.computers || []),
+            ...(products?.accessories || [])
+        ];
+
+        const normalizedQuery = (query || '').toLowerCase();
+        const results = allProducts.filter(p => {
+            const name = (p.name || '').toLowerCase();
+            const description = (p.description || '').toLowerCase();
+            const categorySlug = (p.category || p.categories?.[0]?.slug || '').toLowerCase();
+
+            return name.includes(normalizedQuery) ||
+                description.includes(normalizedQuery) ||
+                categorySlug.includes(normalizedQuery);
+        }).slice(0, 8);
 
         if (results.length === 0) {
             suggestions.innerHTML = `
@@ -1514,23 +1546,29 @@ function handleSearch(query, source = 'desktop') {
             </div>
           `;
         } else {
-            suggestions.innerHTML = results.map(product => `
-            <div class="suggestion-item" onclick="viewProduct('${product.id}'); document.getElementById('${suggestionsId}').classList.remove('active'); ${source === 'mobile' ? 'toggleMobileMenu();' : ''}">
-              <div class="flex items-center gap-3">
-                <img src="${product.image}" alt="${product.name}" class="w-12 h-12 rounded-lg object-cover" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'48\' height=\'48\' viewBox=\'0 0 48 48\'%3E%3Crect fill=\'%23f0f0f0\' width=\'48\' height=\'48\'/%3E%3Ctext x=\'24\' y=\'28\' font-family=\'Arial\' font-size=\'8\' fill=\'%23666\' text-anchor=\'middle\'%3ENo Image%3C/text%3E%3C/svg%3E'; this.alt='Image failed to load';">
-                <div class="flex-1">
-                  <div class="font-medium text-sm dark:text-white">${product.name}</div>
-                  <div class="text-xs text-gray-500 dark:text-gray-400">${product.price.toLocaleString()} تومان</div>
-                  <div class="text-xs text-[#008B8B] mt-1">${getCategoryName(product.category)}</div>
+          suggestions.innerHTML = results.map(product => {
+                const image = fixImagePath(product.main_image || product.image);
+                const price = product.finalPrice || product.originalPrice || product.price || 0;
+                const categoryValue = product.category || product.categories?.[0]?.slug || 'accessory';
+
+                return `
+                <div class="suggestion-item" onclick="viewProduct('${product.id}'); document.getElementById('${suggestionsId}').classList.remove('active'); ${source === 'mobile' ? 'toggleMobileMenu();' : ''}">
+                  <div class="flex items-center gap-3">
+                    <img src="${image}" alt="${product.name}" class="w-12 h-12 rounded-lg object-cover" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'48\' height=\'48\' viewBox=\'0 0 48 48\'%3E%3Crect fill=\'%23f0f0f0\' width=\'48\' height=\'48\'/%3E%3Ctext x=\'24\' y=\'28\' font-family=\'Arial\' font-size=\'8\' fill=\'%23666\' text-anchor=\'middle\'%3ENo Image%3C/text%3E%3C/svg%3E'; this.alt='Image failed to load';">
+                    <div class="flex-1">
+                      <div class="font-medium text-sm dark:text-white">${product.name}</div>
+                      <div class="text-xs text-gray-500 dark:text-gray-400">${price.toLocaleString()} تومان</div>
+                      <div class="text-xs text-[#008B8B] mt-1">${getCategoryNameForSearch(categoryValue)}</div>
+                    </div>
+                    <div class="text-xs text-gray-400">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                      </svg>
+                    </div>
+                  </div>
                 </div>
-                <div class="text-xs text-gray-400">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                  </svg>
-                </div>
-              </div>
-            </div>
-          `).join('');
+                `;
+            }).join('');
         }
 
         suggestions.classList.add('active');
@@ -1621,13 +1659,16 @@ function openReviewModal() {
                 </svg>
               </button>
             </div>
-            
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">نظر شما پس از تایید ادمین نمایش داده می‌شود.</p>
             <form onsubmit="submitReview(event)" class="space-y-6">
               <div>
                 <label class="block font-bold mb-2 dark:text-white">نام شما</label>
                 <input type="text" id="reviewerName" required class="input-glass w-full px-4 py-3 rounded-xl focus:outline-none dark:text-white dark:placeholder-gray-400" placeholder="نام و نام خانوادگی">
               </div>
-              
+                 <div>
+                <label class="block font-bold mb-2 dark:text-white">ایمیل</label>
+                <input type="email" id="reviewerEmail" required class="input-glass w-full px-4 py-3 rounded-xl focus:outline-none dark:text-white dark:placeholder-gray-400" placeholder="example@email.com">
+              </div>
               <div>
                 <label class="block font-bold mb-2 dark:text-white">امتیاز شما</label>
                 <div class="flex gap-2 mb-2">
@@ -1686,51 +1727,43 @@ function closeReviewModal() {
     }
 }
 
-function submitReview(e) {
+async function submitReview(e) {
     e.preventDefault();
-
+    if (!currentProduct) return;
     const name = document.getElementById('reviewerName').value;
+    const email = document.getElementById('reviewerEmail').value;
     const rating = parseInt(document.getElementById('reviewRating').value);
     const comment = document.getElementById('reviewComment').value;
 
-    if (!currentProduct) return;
+    try {
+        const response = await fetch(`/products/api/${currentProduct.slug}/reviews/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email, rating, comment })
+        });
 
-    // Add review to current product
-    const newReview = {
-        user: name,
-        rating: rating,
-        comment: comment,
-        date: new Date().toLocaleDateString('fa-IR')
-    };
+    if (!response.ok) throw new Error('NETWORK');
+        const data = await response.json();
 
-    currentProduct.reviews.push(newReview);
+     const pendingReview = {
+            display_name: name,
+            rating: rating,
+            comment: comment,
+            created_at: new Date().toISOString(),
+            pending: true
+        };
 
-    // Update reviews display
-    const reviewsContainer = document.getElementById('modalProductReviews');
-    const reviewElement = document.createElement('div');
-    reviewElement.className = 'form-glass p-4 rounded-xl';
-    reviewElement.innerHTML = `
-        <div class="flex justify-between items-center mb-3">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-gradient-to-r from-[#008B8B] to-[#006666] rounded-full flex items-center justify-center text-white font-bold">
-              ${newReview.user.charAt(0)}
-            </div>
-            <div>
-              <span class="font-bold dark:text-white">${newReview.user}</span>
-              <div class="text-xs text-gray-500">${newReview.date}</div>
-            </div>
-          </div>
-          <div class="flex text-yellow-400">
-            ${'★'.repeat(newReview.rating)}${'☆'.repeat(5 - newReview.rating)}
-          </div>
-        </div>
-        <p class="text-gray-600 dark:text-gray-400">${newReview.comment}</p>
-      `;
+     currentProductReviews = [pendingReview, ...currentProductReviews];
+        renderProductReviewList(currentProductReviews);
+        updateModalRating(data.average_rating ?? currentProduct.average_rating ?? 0, data.review_count ?? currentProduct.review_count ?? 0);
 
-    reviewsContainer.insertBefore(reviewElement, reviewsContainer.firstChild);
+
 
     closeReviewModal();
-    showNotification('نظر شما با موفقیت ثبت شد!', 'success');
+        showNotification('نظر شما ارسال شد و پس از تایید نمایش داده می‌شود.', 'success');
+    } catch (error) {
+        showNotification('ارسال نظر با مشکل مواجه شد. لطفاً دوباره تلاش کنید.', 'error');
+    }
 }
 
 
@@ -1798,88 +1831,144 @@ function selectProductColor(color, element, container) {
     // نمایش نام رنگ
     document.getElementById('selectedColor').textContent = selectedProductColor;
 }
+async function fetchProductReviews(slug) {
+     try {
+        const response = await fetch(`/products/api/${slug}/reviews/`);
+        if (!response.ok) throw new Error('NETWORK');
+        return await response.json();
+    } catch (error) {
+        return { reviews: [], average_rating: 0, review_count: 0 };
+    }
+}
 
-function viewProduct(id) {
+function renderProductReviewList(reviews) {
+    const container = document.getElementById('modalProductReviews');
+    if (!container) return;
+
+    if (!reviews || reviews.length === 0) {
+        container.innerHTML = '<div class="text-gray-500 dark:text-gray-400">هنوز نظری ثبت نشده است.</div>';
+        return;
+    }
+
+    container.innerHTML = reviews.map(review => {
+        const name = review.display_name || review.name || 'کاربر';
+        const dateText = review.created_at ? new Date(review.created_at).toLocaleDateString('fa-IR') : '';
+        const pendingBadge = review.pending ? '<span class="px-2 py-1 rounded-lg bg-yellow-100 text-yellow-700 text-xs">در انتظار تایید</span>' : '';
+
+        return `
+            <div class="form-glass p-4 rounded-xl">
+                <div class="flex justify-between items-center mb-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-gradient-to-r from-[#008B8B] to-[#006666] rounded-full flex items-center justify-center text-white font-bold">
+                            ${name.charAt(0)}
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="font-bold dark:text-white">${name}</span>
+                                ${pendingBadge}
+                            </div>
+                            <div class="text-xs text-gray-500">${dateText}</div>
+                        </div>
+                    </div>
+                    <div class="flex text-yellow-400">
+                        ${'★'.repeat(review.rating || 0)}${'☆'.repeat(5 - (review.rating || 0))}
+                    </div>
+                </div>
+                <p class="text-gray-600 dark:text-gray-400">${review.comment || ''}</p>
+            </div>
+        `;
+    }).join('');
+}
+
+function updateModalRating(rating = 0, count = 0) {
+    const container = document.getElementById('modalProductRating');
+    if (!container) return;
+    container.innerHTML = renderRatingMarkup(rating, count);
+}
+
+async function viewProduct(id) {
     showLoading();
 
-    setTimeout(() => {
-        currentProduct = findProduct(id);
-         if (!currentProduct) {
-            hideLoading();
-            console.warn('محصول مورد نظر یافت نشد');
-            return;
-        }
+    currentProduct = findProduct(id);
+    if (!currentProduct) {
+        hideLoading();
+        console.warn('محصول مورد نظر یافت نشد');
+        return;
+    }
 
+        const reviewPayload = await fetchProductReviews(currentProduct.slug);
+        currentProductReviews = reviewPayload.reviews || [];
+        
         currentProductQuantity = 1;
-        selectedProductColor = ''; // خالی در ابتدا
+        selectedProductColor = '';
 
-        // ---- نام و قیمت ----
         document.getElementById('modalProductName').textContent = currentProduct.name || '';
-
         const priceEl = document.getElementById('modalProductPrice');
         const originalPriceEl = document.getElementById('modalOriginalPrice');
         const discountEl = document.getElementById('modalDiscount');
 
+
         const hasDiscount = currentProduct.discount && currentProduct.discount > 0;
 
         if (hasDiscount) {
-            originalPriceEl.textContent = `${currentProduct.originalPrice.toLocaleString()} تومان`;
-            originalPriceEl.style.display = 'inline-block';
+        originalPriceEl.textContent = `${currentProduct.originalPrice.toLocaleString()} تومان`;
+        originalPriceEl.style.display = 'inline-block';
 
-            priceEl.textContent = `${currentProduct.finalPrice.toLocaleString()} تومان`;
+        cpriceEl.textContent = `${currentProduct.finalPrice.toLocaleString()} تومان`;
 
-            const percent = Math.round((currentProduct.discount / currentProduct.originalPrice) * 100);
-            discountEl.textContent = `${percent}% تخفیف`;
-            discountEl.style.display = 'inline-block';
-        } else {
-            priceEl.textContent = `${currentProduct.price.toLocaleString()} تومان`;
-            originalPriceEl.style.display = 'none';
-            discountEl.style.display = 'none';
-        }
+        const percent = Math.round((currentProduct.discount / currentProduct.originalPrice) * 100);
+        discountEl.textContent = `${percent}% تخفیف`;
+        discountEl.style.display = 'inline-block';
+    } else {
+        priceEl.textContent = `${currentProduct.price.toLocaleString()} تومان`;
+        originalPriceEl.style.display = 'none';
+        discountEl.style.display = 'none';
+    }
 
-        // ---- تصاویر محصول ----
-        let images = [];
-        if (currentProduct.gallery_images && currentProduct.gallery_images.length > 0) {
-            images = [
-                fixImagePath(currentProduct.main_image),
-                ...currentProduct.gallery_images.map(img => fixImagePath(img.image))
-            ];
-        } else {
-            images = [fixImagePath(currentProduct.main_image)];
-        }
+    const averageRating = reviewPayload.average_rating ?? currentProduct.average_rating ?? 0;
+    const reviewCount = reviewPayload.review_count ?? currentProduct.review_count ?? 0;
+    updateModalRating(averageRating, reviewCount);
+
+    let images = [];
+    if (currentProduct.gallery_images && currentProduct.gallery_images.length > 0) {
+        images = [
+            fixImagePath(currentProduct.main_image),
+            ...currentProduct.gallery_images.map(img => fixImagePath(img.image))
+        ];
+    } else {
+        images = [fixImagePath(currentProduct.main_image)];
+    }
 
         document.getElementById('modalProductImage').src = images[0];
-
         const thumbsContainer = document.getElementById('modalProductThumbs');
         thumbsContainer.innerHTML = images
-            .map((img, i) => `
+        .map((img, i) => `
                 <img src="${img}" class="thumb ${i === 0 ? 'active' : ''}" onclick="changeMainImage(${i})">
             `)
-            .join('');
-        window.currentGalleryImages = images;
+             .join('');
+    window.currentGalleryImages = images;
 
-        // ---- ویژگی‌ها ----
-        const features = currentProduct.features || {};
-        const specsContainer = document.getElementById('modalProductFeatures');
-        let specsHTML = '';
-        for (const key in features) {
-            features[key].forEach(value => {
-                specsHTML += `
+    const features = currentProduct.features || {};
+    const specsContainer = document.getElementById('modalProductFeatures');
+    let specsHTML = '';
+    for (const key in features) {
+        features[key].forEach(value => {
+            specsHTML += `
                     <div class="flex justify-between">
                         <span class="text-gray-600 dark:text-gray-400">${key}:</span>
                         <span class="font-medium">${value}</span>
                     </div>
                 `;
-            });
-        }
-        specsContainer.innerHTML = specsHTML;
+           });
+    }
+    specsContainer.innerHTML = specsHTML;
 
-        // ---- رنگ‌ها ----
+        
         if (currentProduct.colors && currentProduct.colors.length > 0) {
             renderProductColors(currentProduct.colors);
         }
 
-        // ---- موجودی ----
+        
         const stockEl = document.getElementById('modalStock');
         if (currentProduct.stock_quantity != null && currentProduct.stock_quantity > 0) {
             stockEl.textContent = `تنها ${currentProduct.stock_quantity} عدد باقی مانده!`;
@@ -1887,29 +1976,8 @@ function viewProduct(id) {
             stockEl.textContent = 'ناموجود';
         }
 
-        // ---- نظرات ----
-        const reviews = currentProduct.reviews || [];
-        const reviewsContainer = document.getElementById('modalProductReviews');
-        reviewsContainer.innerHTML = reviews.map(r => `
-            <div class="form-glass p-4 rounded-xl">
-                <div class="flex justify-between items-center mb-3">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-[#008B8B] text-white rounded-full flex items-center justify-center font-bold">
-                            ${r.user ? r.user[0] : "?"}
-                        </div>
-                        <span class="font-bold">${r.user || "ناشناس"}</span>
-                    </div>
-                    <div class="text-yellow-400">
-                        ${"★".repeat(r.rating || 0)}${"☆".repeat(5 - (r.rating || 0))}
-                    </div>
-                </div>
-                <p class="text-gray-600 dark:text-gray-300">${r.comment || ""}</p>
-            </div>
-        `).join('');
-
         document.getElementById('productModal').classList.add('active');
-        hideLoading();
-    }, 200);
+    hideLoading();
 }
 
 

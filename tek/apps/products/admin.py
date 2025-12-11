@@ -148,11 +148,33 @@ class ProductGalleryAdmin(admin.ModelAdmin):
 
 @admin.register(ProductReview)
 class ProductReviewAdmin(admin.ModelAdmin):
-    list_display = ('product', 'name', 'rating', 'is_approved', 'created_at')
+    list_display = ('product', 'name', 'rating_stars', 'status_badge', 'created_at')
     list_filter = ('is_approved', 'rating', 'created_at')
     search_fields = ('product__name', 'name', 'email', 'comment')
+    readonly_fields = ('created_at',)
+    ordering = ('-created_at',)
     actions = ['approve_reviews']
 
+    def rating_stars(self, obj):
+        stars = '★' * obj.rating + '☆' * (5 - obj.rating)
+        return format_html('<span style="color:#f59e0b; font-weight:700;">{}</span>', stars)
+
+    rating_stars.short_description = 'امتیاز'
+
+    def status_badge(self, obj):
+        if obj.is_approved:
+            return format_html(
+                '<span style="background-color: rgba(22,163,74,0.12); color:#15803d; padding:4px 10px; border-radius:12px;">{}</span>',
+                'تایید شده'
+            )
+        return format_html(
+            '<span style="background-color: rgba(234,179,8,0.12); color:#b45309; padding:4px 10px; border-radius:12px;">{}</span>',
+            'در انتظار تایید'
+        )
+
+    status_badge.short_description = 'وضعیت'
+
+    
     @admin.action(description='تایید نظرات انتخاب شده')
     def approve_reviews(self, request, queryset):
         queryset.update(is_approved=True)
