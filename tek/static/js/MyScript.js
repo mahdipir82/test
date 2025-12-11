@@ -15,6 +15,32 @@ let products = {};
 let organizedProducts = {}; 
 const blogPosts = [];
 // Sample Products Data
+
+// ==========================
+//        Navigation
+// ==========================
+function navigateTo(page) {
+    const routes = {
+        home: '/',
+        laptops: '/products/laptops/',
+        computers: '/products/computers/',
+        accessories: '/products/accessories/',
+        blog: '/blogs/post_list/',
+    };
+
+    // اگر صفحه داخلی وجود داشته باشد، ابتدا آن را فعال می‌کنیم
+    const pageElement = document.getElementById(`${page}Page`);
+    if (pageElement) {
+        document.querySelectorAll('.page-content').forEach(el => el.classList.remove('active'));
+        pageElement.classList.add('active');
+        pageElement.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // سپس در صورت وجود مسیر مشخص، کاربر را به صفحه مربوطه هدایت می‌کنیم
+    if (routes[page]) {
+        window.location.href = routes[page];
+    }
+}
 function buildStarIcons(rating = 0) {
     const fullStars = Math.floor(rating);
     const halfStar = rating % 1 >= 0.5 ? 1 : 0;
