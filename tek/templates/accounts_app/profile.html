@@ -351,7 +351,7 @@ function renderProfilePurchases(){
     if (lastPurchase) lastPurchase.textContent = history[history.length - 1].purchaseDate || "-";
 }
 
-function finalizeOrder(){
+async function finalizeOrder(){
     if (typeof cart === "undefined" || !Array.isArray(cart) || cart.length === 0){
         showNotification('سبد خرید فعلی خالی است!', 'error');
         return;
@@ -370,26 +370,53 @@ function finalizeOrder(){
         };
     });
 
-    const total = items.reduce((sum, it) => sum + (it.total_price || 0), 0);
-    const history = getPurchaseHistory();
-    const newOrder = {
-        id: `order-${Date.now()}`,
-        title: `سفارش شماره ${history.length + 1}`,
-        purchaseDate,
-        items,
-        total
-    };
+    try {
+        const payload = {
+            items: cart.map(item => ({
+                product_id: item.id,
+                quantity: item.quantity || 1
+            }))
+        };
 
-    history.push(newOrder);
-    savePurchaseHistory(history);
-    renderProfilePurchases();
+    const response = await fetch('/orders/api/finalize/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
 
-    showNotification('این سایت فقط برای رزومه است و قابلیت فروش ندارد.', 'info');
+      const result = await response.json();
+        if (!response.ok) {
+            showNotification(result.error || 'ثبت سفارش با مشکل مواجه شد.', 'error');
+            return;
+        }
 
-    cart = [];
-    if (typeof saveCart === "function") saveCart();
-    if (typeof updateCartBadge === "function") updateCartBadge();
-    renderProfileCart();
+     const history = getPurchaseHistory();
+        const newOrder = {
+            id: `order-${Date.now()}`,
+            title: `سفارش شماره ${history.length + 1}`,
+            purchaseDate,
+            items,
+            total: items.reduce((sum, it) => sum + (it.total_price || 0), 0),
+            warehouse: result.warehouse,
+            stockUpdates: result.items
+        };
+
+        history.push(newOrder);
+        savePurchaseHistory(history);
+        renderProfilePurchases();
+
+        showNotification(result.message || 'سفارش ثبت شد و موجودی به‌روز شد.', 'success');
+
+        cart = [];
+        if (typeof saveCart === "function") saveCart();
+        if (typeof updateCartBadge === "function") updateCartBadge();
+        renderProfileCart();
+    } catch (error) {
+        console.error(error);
+        showNotification('ارتباط با سرور ممکن نشد.', 'error');
+    }
 }
 </script>
 {% endblock %}

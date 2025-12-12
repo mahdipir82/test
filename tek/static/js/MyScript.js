@@ -12,8 +12,9 @@ let currentProduct = null;
 let currentProductReviews = [];
 let authMode = 'login';
 let products = {};
-let organizedProducts = {}; 
+let organizedProducts = {};
 const blogPosts = [];
+const storeName = window.STORE_NAME || 'تک‌استور';   
 // Sample Products Data
 
 // ==========================
@@ -2506,7 +2507,7 @@ async function simulateChatGPTResponse(userMessage) {
     }
 
     if (message.includes('سلام') || message.includes('درود')) {
-        return 'سلام و درود! خوش اومدید به تک‌استور. چطور می‌تونم کمکتون کنم؟ اگه سوالی درباره محصولات، قیمت‌ها یا خدماتمون دارید، بپرسید.';
+        return 'سلام و درود! خوش اومدید به ${storeName}. چطور می‌تونم کمکتون کنم؟ اگه سوالی درباره محصولات، قیمت‌ها یا خدماتمون دارید، بپرسید.';
     }
 
     // Default intelligent response

@@ -8,7 +8,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.http import JsonResponse
 from .serializers import ProductReviewSerializer, ProductReviewCreateSerializer
-from .forms import ProductReviewForm
+from .forms import ProductReviewForm, ProductReviewReplyForm
 from .models import Brand, Category, Product, ProductReview
 from .serializers import BrandSerializer, CategorySerializer, ProductSerializer
 
@@ -101,26 +101,49 @@ def accessories_page(request):
     return render(request, "products_app/accessories.html", {"products": products})
 def product_detail(request, slug):
     product = get_object_or_404(Product, slug=slug, is_active=True)
-    approved_reviews = product.approved_reviews.order_by('-created_at')
+    approved_reviews = product.approved_reviews.order_by('-created_at').prefetch_related('replies')
     average_rating = approved_reviews.aggregate(avg=Avg('rating')).get('avg') or 0
 
-    if request.method == 'POST':
-        form = ProductReviewForm(request.POST)
-        if form.is_valid():
-            review = form.save(commit=False)
-            review.product = product
-            if request.user.is_authenticated:
-                review.user = request.user
-            review.save()
-            return redirect('products:product_detail', slug=product.slug)
-    else:
-        initial = {}
-        if request.user.is_authenticated:
-            initial = {
+    review_form = ProductReviewForm()
+    reply_form = ProductReviewReplyForm()
+
+    if request.user.is_authenticated:
+        review_form = ProductReviewForm(
+            initial={
                 'name': request.user.get_full_name() or request.user.username,
                 'email': request.user.email,
             }
-        form = ProductReviewForm(initial=initial)
+        )
+        reply_form = ProductReviewReplyForm(
+            initial={
+                'name': request.user.get_full_name() or request.user.username,
+                'email': request.user.email,
+            }
+        )
+
+    if request.method == 'POST':
+        if request.POST.get('parent_review_id'):
+            reply_form = ProductReviewReplyForm(request.POST)
+            if reply_form.is_valid():
+                parent_review = get_object_or_404(
+                    ProductReview, id=request.POST.get('parent_review_id'), product=product
+                )
+                reply = reply_form.save(commit=False)
+                reply.review = parent_review
+                if request.user.is_authenticated:
+                    reply.user = request.user
+                reply.save()
+                return redirect('products:product_detail', slug=product.slug)
+        else:
+            review_form = ProductReviewForm(request.POST)
+            if review_form.is_valid():
+                review = review_form.save(commit=False)
+                review.product = product
+                if request.user.is_authenticated:
+                    review.user = request.user
+                review.save()
+                return redirect('products:product_detail', slug=product.slug)
+
 
     return render(
         request,
@@ -129,7 +152,8 @@ def product_detail(request, slug):
             "product": product,
             "reviews": approved_reviews,
             "average_rating": round(average_rating, 1) if average_rating else 0,
-            "form": form,
+            "form": review_form,
+            "reply_form": reply_form,
         },
     )
 

@@ -1,13 +1,27 @@
-import requests
+from django.db.models import Sum
+from apps.products.models import Product
 
-PRODUCT_API = "http://127.0.0.1:8000/products/api/list/"
 
 def fetch_products():
     try:
-        response = requests.get(PRODUCT_API)
-        if response.status_code == 200:
-            return response.json()
-        else:
-            return []
-    except:
+        products = (
+            Product.objects.filter(is_active=True)
+            .annotate(stock_quantity=Sum("stocks__quantity"))
+            .prefetch_related("categories")
+        )
+        data = []
+        for product in products:
+            categories = [category.title for category in product.categories.all()]
+            data.append(
+                {
+                    "id": product.id,
+                    "name": product.name,
+                    "categories": categories,
+                    "stock_quantity": product.stock_quantity or product.stock,
+                    "originalPrice": product.price,
+                    "finalPrice": product.get_price_after_discount(),
+                }
+            )
+        return data
+    except Exception:
         return []

@@ -5,7 +5,7 @@
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-8">
                     <h1 class="text-2xl font-bold text-[#008B8B] cursor-pointer" onclick="navigateTo('home')"><span
-                            class="bg-gradient-to-r from-[#008B8B] to-[#006666] bg-clip-text text-transparent">تک‌استور</span>
+                            class="bg-gradient-to-r from-[#008B8B] to-[#006666] bg-clip-text text-transparent">{{ store_name }}</span>
                     </h1>
                     <nav class="hidden lg:flex gap-6"><a href="{% url 'main:index' %}" onclick="navigateTo('home')"
                             class="nav-link hover:text-[#008B8B] transition dark:text-gray-300 font-medium">خانه</a>

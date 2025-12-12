@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.urls import path,include
 from django.conf import settings
 from django.conf.urls.static import static
-# from rest_framework_simplejwt.views import TokenRefreshView
+from apps.main.models import SiteSetting
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -29,14 +29,14 @@ urlpatterns = [
     path('api/warehouse/', include('apps.warehouse.urls', namespace='warehouse')),
     path('discounts/',include('apps.discounts.urls',namespace='discounts')),
     path("ai/", include("apps.aiassistant.urls")),
-    
-    # path("orders/", include("apps.orders.urls")),
+    path("orders/", include("apps.orders.urls", namespace="orders")),
+
     # path('ckeditor/', include('ckeditor_uploader.urls')),
     
     
 ]+static(settings.MEDIA_URL,document_root=settings.MEDIA_ROOT)
 
-
-admin.site.site_header = "مدیریت فروشگاه تک‌استور"
-admin.site.site_title = "پنل تک‌استور"
+store_name = SiteSetting.get_store_name()
+admin.site.site_header = f"مدیریت فروشگاه {store_name}"
+admin.site.site_title = f"پنل {store_name}"
 admin.site.index_title = "خوش آمدید"

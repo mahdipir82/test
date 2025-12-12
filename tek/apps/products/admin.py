@@ -1,9 +1,17 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import ProductReview
+
 from .models import (
-    Brand, Category, Feature,FeatureValue,
-    Product, ProductFeature,ProductGallery,ProductColor
+    Brand,
+    Category,
+    Feature,
+    FeatureValue,
+    Product,
+    ProductFeature,
+    ProductGallery,
+    ProductColor,
+    ProductReview,
+    ProductReviewReply,
 )
 
 # ================================
@@ -177,4 +185,30 @@ class ProductReviewAdmin(admin.ModelAdmin):
     
     @admin.action(description='تایید نظرات انتخاب شده')
     def approve_reviews(self, request, queryset):
+         queryset.update(is_approved=True)
+
+
+@admin.register(ProductReviewReply)
+class ProductReviewReplyAdmin(admin.ModelAdmin):
+    list_display = ("review", "name", "status_badge", "created_at")
+    list_filter = ("is_approved", "created_at")
+    search_fields = ("review__product__name", "name", "comment")
+    readonly_fields = ("created_at",)
+    actions = ["approve_replies"]
+
+    def status_badge(self, obj):
+        if obj.is_approved:
+            return format_html(
+                '<span style="background-color: rgba(22,163,74,0.12); color:#15803d; padding:4px 10px; border-radius:12px;">{}</span>',
+                "تایید شده",
+            )
+        return format_html(
+            '<span style="background-color: rgba(234,179,8,0.12); color:#b45309; padding:4px 10px; border-radius:12px;">{}</span>',
+            "در انتظار تایید",
+        )
+
+    status_badge.short_description = "وضعیت"
+
+    @admin.action(description="تایید پاسخ‌های انتخاب شده")
+    def approve_replies(self, request, queryset):
         queryset.update(is_approved=True)

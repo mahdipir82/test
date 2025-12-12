@@ -1,7 +1,7 @@
 {% extends "admin/base.html" %}
 {% load static %}
 
-{% block title %}مدیریت تک‌استور | {{ title }}{% endblock %}
+{% block title %}مدیریت {{ store_name }} | {{ title }}{% endblock %}
 
 {% block extrastyle %}{{ block.super }}
 <link rel="stylesheet" type="text/css" href="{% static 'css/admin_theme.css' %}">
@@ -9,13 +9,13 @@
 
 {% block branding %}
 <h1 id="site-name">
-    <a href="{% url 'admin:index' %}">مدیریت فروشگاه تک‌استور</a>
+    <a href="{% url 'admin:index' %}">مدیریت فروشگاه {{ store_name }}</a>
 </h1>
 <div class="text-sm text-teal-50 font-medium">پنل مدیریت با تم فروشگاه</div>
 {% endblock %}
 
 {% block nav-global %}
 <div class="breadcrumbs" style="margin:0.5rem 0; padding:0.5rem 1rem;">
-    <span>🏬 مدیریت فروشگاه</span>
+<span>🏬 مدیریت فروشگاه {{ store_name }}</span>
 </div>
 {% endblock %}

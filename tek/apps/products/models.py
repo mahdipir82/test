@@ -237,3 +237,41 @@ class ProductReview(models.Model):
         if self.user:
             return self.user.username
         return self.name
+
+
+class ProductReviewReply(models.Model):
+    review = models.ForeignKey(
+        ProductReview,
+        on_delete=models.CASCADE,
+        related_name="replies",
+        verbose_name="نظر والد",
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="product_review_replies",
+        verbose_name="کاربر",
+    )
+    name = models.CharField(max_length=120, verbose_name="نام")
+    email = models.EmailField(verbose_name="ایمیل")
+    comment = models.TextField(verbose_name="متن پاسخ")
+    is_approved = models.BooleanField(default=False, verbose_name="تایید شده")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاریخ ایجاد")
+
+    class Meta:
+        verbose_name = "پاسخ به نظر"
+        verbose_name_plural = "پاسخ‌های نظرات"
+        ordering = ("created_at",)
+
+    def __str__(self):
+        return f"پاسخ {self.name} به {self.review}"
+    
+    @property
+    def display_name(self):
+        if self.user and self.user.get_full_name():
+            return self.user.get_full_name()
+        if self.user:
+            return self.user.username
+        return self.name

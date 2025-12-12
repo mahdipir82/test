@@ -1,13 +1,25 @@
-from django.shortcuts import render
+import importlib.util
 import json
-from django.http import StreamingHttpResponse
-from rest_framework.views import APIView
+import uuid
+from django.http import JsonResponse, StreamingHttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
-from openai import OpenAI
+from rest_framework.views import APIView
 
-client = OpenAI(api_key="YOUR_API_KEY_HERE")
+if importlib.util.find_spec("openai"):
+    from openai import OpenAI  # type: ignore
+    client = OpenAI(api_key="YOUR_API_KEY_HERE")
+else:
+    OpenAI = None  # type: ignore
+    client = None
 
+from apps.main.models import SiteSetting
+from .models import ChatMessage
+from .utils import fetch_products
+
+def get_store_name():
+    return SiteSetting.get_store_name()
 
 class ChatBotAPI(APIView):
     permission_classes = [AllowAny]
@@ -15,53 +27,54 @@ class ChatBotAPI(APIView):
     def post(self, request):
         user_message = request.data.get("message")
 
-        # اگر پیام خالی باشد
         if not user_message:
             return Response({"error": "پیامی ارسال نشده."}, status=400)
 
-        # 🎯 پاسخ زنده (Streaming)
+        if client is None:
+            return Response({"error": "سرویس هوش مصنوعی فعال نیست."}, status=503)
+
+        store_name = get_store_name()
+
         def stream():
             response = client.chat.completions.create(
                 model="gpt-4o-mini",
                 stream=True,
                 messages=[
-                    {"role": "system", "content": "تو یک پشتیبان فروشگاه هستی. مودب، سریع، فروشنده حرفه‌ای."},
-                    {"role": "user", "content": user_message}
-                ]
+                     {
+                        "role": "system",
+                        "content": f"تو یک پشتیبان فروشگاه {store_name} هستی. مودب، سریع، فروشنده حرفه‌ای.",
+                    },
+                    {"role": "user", "content": user_message},
+                ],
             )
 
             for chunk in response:
                 if chunk.choices:
                     delta = chunk.choices[0].delta.get("content")
                     if delta:
-                        yield f"{delta}"
+                        yield delta
+
 
         return StreamingHttpResponse(stream(), content_type="text/plain")
     
     
     
     
-import json
-import requests
-from django.http import StreamingHttpResponse
-from rest_framework.views import APIView
-from rest_framework.permissions import AllowAny
-from openai import OpenAI
-from .utils import fetch_products
-
-client = OpenAI(api_key="YOUR_API_KEY")
-
 
 class ChatBotView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
         user_msg = request.data.get("message")
+        store_name = get_store_name()
+
+        if client is None:
+            return Response({"error": "سرویس هوش مصنوعی فعال نیست."}, status=503)
 
         products = fetch_products()
 
         system_prompt = f"""
-تو یک پشتیبان حرفه‌ای فروشگاه هستی.
+تو یک پشتیبان حرفه‌ای فروشگاه {store_name} هستی.
 
 ### لیست محصولات فروشگاه:
 {json.dumps(products, ensure_ascii=False)}
@@ -84,7 +97,7 @@ class ChatBotView(APIView):
                 stream=True,
                 messages=[
                     {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_msg}
+                    {"role": "user", "content": user_msg},
                 ]
             )
             for chunk in response:
@@ -98,32 +111,25 @@ class ChatBotView(APIView):
 
 
 
-
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.permissions import IsAdminUser
-from .models import ChatMessage
-
 class ChatHistoryAdminView(APIView):
     permission_classes = [IsAdminUser]
 
     def get(self, request):
-        messages = ChatMessage.objects.all().order_by("-created_at")[:200]  # آخرین ۲۰۰ پیام
+        messages = ChatMessage.objects.all().order_by("-created_at")[:200]   
         data = [
             {
                 "session_id": m.session_id,
                 "role": m.role,
                 "message": m.message,
-                "created_at": m.created_at
-            } for m in messages
+                
+                "created_at": m.created_at,
+            }
+            for m in messages
         ]
         return Response(data)
 
 
-from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
-import json, uuid
-from .models import ChatMessage
+
 
 @csrf_exempt
 def chat_view(request):
@@ -131,57 +137,38 @@ def chat_view(request):
         data = json.loads(request.body)
         user_msg = data.get("message")
 
-        # مدیریت session
         session_id = request.session.get("chat_session_id")
         if not session_id:
             session_id = str(uuid.uuid4())
             request.session["chat_session_id"] = session_id
-
-        # ذخیره پیام کاربر
-        ChatMessage.objects.create(
-            session_id=session_id,
-            role="user",
-            message=user_msg
-        )
-
-        # --- اینجا پیام را به GPT ارسال کن و پاسخ بگیر ---
-        # bot_response = call_your_gpt_function(user_msg)
+        ChatMessage.objects.create(session_id=session_id, role="user", message=user_msg)
         bot_response = "این فقط نمونه است، GPT بعداً وصل می‌شود"
 
-        # ذخیره پاسخ چت‌بات
-        ChatMessage.objects.create(
-            session_id=session_id,
-            role="bot",
-            message=bot_response
-        )
-
+        ChatMessage.objects.create(session_id=session_id, role="bot", message=bot_response)
         return JsonResponse({"response": bot_response})
 
+    return JsonResponse({"error": "متد نامعتبر"}, status=405)
 
-import requests
 
-def get_products():
-    try:
-        response = requests.get("http://127.0.0.1:8000/products/api/list/")
-        response.raise_for_status()
-        products = response.json()
-        return products
-    except requests.RequestException:
-        return []
+
     
     
     
 def search_product(query):
-    products = get_products()
+    products = fetch_products()
     results = []
     query_lower = query.lower()
-    for p in products:
-        if query_lower in p["name"].lower() or query_lower in p["categories"][0]["title"].lower():
-            results.append({
-                "id": p["id"],
-                "name": p["name"],
-                "price": p["finalPrice"],
-                "stock": p["stock_quantity"],
-                "url": f"/products/{p['id']}/",
-            })
+    for product in products:
+        if query_lower in product["name"].lower() or (
+            product.get("categories") and query_lower in product["categories"][0].lower()
+        ):
+            results.append(
+                {
+                    "id": product["id"],
+                    "name": product["name"],
+                    "price": product["finalPrice"],
+                    "stock": product["stock_quantity"],
+                    "url": f"/products/{product['id']}/",
+                }
+            )
     return results
