@@ -1,4 +1,5 @@
 from django.db.models import Avg
+from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404, redirect, render
 from rest_framework import viewsets
 from rest_framework.response import Response
@@ -9,7 +10,7 @@ from django.utils.decorators import method_decorator
 from django.http import JsonResponse
 from .serializers import ProductReviewSerializer, ProductReviewCreateSerializer
 from .forms import ProductReviewForm, ProductReviewReplyForm
-from .models import Brand, Category, Product, ProductReview
+from .models import Brand, Category, Product, ProductReview, ProductReviewReply
 from .serializers import BrandSerializer, CategorySerializer, ProductSerializer
 
 
@@ -102,8 +103,11 @@ def accessories_page(request):
 def product_detail(request, slug):
     product = get_object_or_404(Product, slug=slug, is_active=True)
     approved_reviews = product.approved_reviews.order_by('-created_at').prefetch_related('replies')
-    average_rating = approved_reviews.aggregate(avg=Avg('rating')).get('avg') or 0
-
+    approved_replies = Prefetch(
+        'replies',
+        queryset=ProductReviewReply.objects.filter(is_approved=True).select_related('user'),
+    )
+    approved_reviews = product.approved_reviews.order_by('-created_at').prefetch_related(approved_replies)
     review_form = ProductReviewForm()
     reply_form = ProductReviewReplyForm()
 

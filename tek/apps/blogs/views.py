@@ -2,15 +2,24 @@ from django.contrib import messages
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from .forms import BlogCommentForm
-from .models import BlogPost
+from .models import BlogCategory, BlogPost
 
 
 def post_list(request):
     posts = (
         BlogPost.objects.filter(is_published=True)
+        .select_related("category")
         .annotate(approved_comments=Count('comments', filter=Q(comments__is_approved=True)))
         .order_by('-created_at')
     )
+    selected_category = request.GET.get("category")
+    categories = BlogCategory.objects.annotate(
+        post_count=Count("posts", filter=Q(posts__is_published=True))
+    ).order_by("name")
+
+    if selected_category:
+        posts = posts.filter(category__slug=selected_category)
+
 
     featured_post = posts.first()
     other_posts = posts[1:] if featured_post else posts
@@ -18,7 +27,12 @@ def post_list(request):
     return render(
         request,
         'blogs_app/post_list.html',
-        {'featured_post': featured_post, 'posts': other_posts},
+          {
+            'featured_post': featured_post,
+            'posts': other_posts,
+            'categories': categories,
+            'selected_category': selected_category,
+        },
     )
 
 
@@ -28,7 +42,7 @@ def about(request):
 
 def post_detail(request, slug):
     post = get_object_or_404(BlogPost, slug=slug, is_published=True)
-    approved_comments = post.comments.filter(is_approved=True)
+    approved_comments = post.comments.filter(is_approved=True).select_related("user").order_by("-created_at")
 
     if request.method == 'POST':
         form = BlogCommentForm(request.POST)

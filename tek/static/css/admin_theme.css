@@ -7,7 +7,36 @@
 body.login {
     background: linear-gradient(135deg, rgba(0,139,139,0.12), rgba(0,102,102,0.25));
 }
+@media (prefers-color-scheme: dark) {
+    body {
+        background: #0b1224;
+        color: #e2e8f0;
+    }
 
+    #content {
+        background: #0f172a;
+        color: #e2e8f0;
+        border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .module h2, .module caption, .inline-group h2 {
+        background: linear-gradient(90deg, rgba(14,165,233,0.5), rgba(16,185,129,0.45));
+    }
+
+    .breadcrumbs {
+        background: #111827;
+        border-color: rgba(255,255,255,0.06);
+        color: #cbd5e1;
+    }
+
+    #header {
+        background: linear-gradient(90deg, #0ea5e9, #0f766e);
+    }
+
+    a, a:link, a:visited {
+        color: #38bdf8;
+    }
+}
 #header {
     background: linear-gradient(90deg, var(--ts-primary), #006666);
     color: #fff;

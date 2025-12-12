@@ -3,11 +3,35 @@ from django.db import models
 from django.urls import reverse
 from django.utils.text import slugify
 from utils import FileUpload
+class BlogCategory(models.Model):
+    name = models.CharField(max_length=120, unique=True, verbose_name="نام دسته بندی")
+    slug = models.SlugField(max_length=140, unique=True, verbose_name="اسلاگ")
+
+    class Meta:
+        verbose_name = "دسته بندی مقاله"
+        verbose_name_plural = "دسته بندی های مقالات"
+        ordering = ("name",)
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
 
 
 class BlogPost(models.Model):
     title = models.CharField(max_length=200, verbose_name='عنوان')
     slug = models.SlugField(max_length=220, unique=True, verbose_name='اسلاگ')
+    category = models.ForeignKey(
+        BlogCategory,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="posts",
+        verbose_name="دسته بندی",
+    )
     content = models.TextField(verbose_name='محتوا')
     cover_upload = FileUpload('images', 'blogs')
     cover_image = models.ImageField(

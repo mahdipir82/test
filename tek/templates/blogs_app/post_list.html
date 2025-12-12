@@ -9,7 +9,19 @@
             </h2>
             <p class="text-xl text-gray-600 dark:text-gray-400">آخرین اخبار و راهنمای‌های تکنولوژی</p>
         </div>
-
+           {% if categories %}
+        <div class="flex flex-wrap items-center gap-3 justify-center mb-10">
+            <a href="{{ request.path }}" class="px-4 py-2 rounded-full border text-sm {% if not selected_category %}border-[#008B8B] bg-[#008B8B] text-white{% else %}border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200{% endif %}">
+                همه مقالات
+            </a>
+            {% for category in categories %}
+                <a href="{{ request.path }}?category={{ category.slug }}" class="px-4 py-2 rounded-full border text-sm transition {% if selected_category == category.slug %}border-[#008B8B] bg-[#008B8B] text-white{% else %}border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200{% endif %}">
+                    {{ category.name }}
+                    <span class="text-xs text-gray-500">({{ category.post_count }})</span>
+                </a>
+            {% endfor %}
+        </div>
+        {% endif %}
         {% if featured_post %}
         <div class="mb-12">
             <div class="form-glass rounded-3xl overflow-hidden">
@@ -47,7 +59,7 @@
                                   data-blog-modal="true"
                                   data-blog-modal-url="{{ featured_post.get_absolute_url }}"
                                   data-blog-title="{{ featured_post.title }}"
-                                  data-blog-date="{{ featured_post.created_at|date:"Y/m/d" }}"
+                                  data-blog-date="{{ featured_post.created_at|date:'Y/m/d' }}"
                                   data-blog-excerpt="{{ featured_post.content|striptags|truncatechars:220 }}"
                                   data-blog-rating="{{ featured_post.average_rating }}"
                                   data-blog-comments="{{ featured_post.approved_comments }}"
@@ -73,7 +85,7 @@
                    data-blog-modal="true"
                    data-blog-modal-url="{{ post.get_absolute_url }}"
                    data-blog-title="{{ post.title }}"
-                   data-blog-date="{{ post.created_at|date:"Y/m/d" }}"
+                   data-blog-date="{{ post.created_at|date:'Y/m/d' }}"
                    data-blog-excerpt="{{ post.content|striptags|truncatechars:120 }}"
                    data-blog-rating="{{ post.average_rating }}"
                    data-blog-comments="{{ post.approved_comments }}"
@@ -89,6 +101,11 @@
                             <img src="https://placehold.co/400x250/edf2f7/334155?text=Blog" alt="{{ post.title }}" class="w-full h-48 object-cover">
                         {% endif %}
                         <div class="absolute top-4 right-4 bg-[#008B8B] text-white px-3 py-1 rounded-full text-xs font-bold">{{ post.created_at|date:"Y/m/d" }}</div>
+                        {% if post.category %}
+                        <div class="absolute bottom-3 left-3 bg-white/90 dark:bg-gray-800/90 text-gray-800 dark:text-gray-100 px-3 py-1 rounded-full text-xs font-semibold border border-gray-200 dark:border-gray-700">
+                            {{ post.category.name }}
+                        </div>
+                        {% endif %}
                     </div>
                     <div class="p-6">
                         <h4 class="font-bold text-lg mb-3 dark:text-white line-clamp-2">{{ post.title }}</h4>

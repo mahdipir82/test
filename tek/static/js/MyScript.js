@@ -2461,16 +2461,20 @@ async function sendMessage(e) {
     input.value = "";
 
     try {
-        const res = await fetch("/aiassistant/chat/", {
+        const res = await fetch("/ai/chat/", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify({message})
         });
+            if (!res.ok) {
+            throw new Error("chat_request_failed");
+        }
         const data = await res.json();
-        messagesContainer.innerHTML += `<div class="bg-gray-100 p-2 rounded mb-2">${data.response}</div>`;
+        messagesContainer.innerHTML += `<div class="bg-gray-100 dark:bg-gray-700 p-2 rounded mb-2">${data.response}</div>`;
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     } catch (err) {
         console.error(err);
+         messagesContainer.innerHTML += `<div class="bg-red-100 text-red-700 p-2 rounded mb-2">در حال حاضر امکان پاسخگویی هوش مصنوعی وجود ندارد.</div>`;
     }
 }
 

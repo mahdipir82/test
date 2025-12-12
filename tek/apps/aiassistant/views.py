@@ -30,32 +30,25 @@ class ChatBotAPI(APIView):
         if not user_message:
             return Response({"error": "پیامی ارسال نشده."}, status=400)
 
-        if client is None:
-            return Response({"error": "سرویس هوش مصنوعی فعال نیست."}, status=503)
-
         store_name = get_store_name()
 
-        def stream():
-            response = client.chat.completions.create(
-                model="gpt-4o-mini",
-                stream=True,
-                messages=[
-                     {
-                        "role": "system",
-                        "content": f"تو یک پشتیبان فروشگاه {store_name} هستی. مودب، سریع، فروشنده حرفه‌ای.",
-                    },
-                    {"role": "user", "content": user_message},
-                ],
-            )
+        if client is None:
+            fallback = f"سرویس هوش مصنوعی فعال نیست اما خوشحال می‌شویم در فروشگاه {store_name} به شما کمک کنیم. لطفا موضوع یا محصول مورد نظرتان را بنویسید."
+            return Response({"response": fallback}, status=200)
 
-            for chunk in response:
-                if chunk.choices:
-                    delta = chunk.choices[0].delta.get("content")
-                    if delta:
-                        yield delta
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                 {
+                    "role": "system",
+                    "content": f"تو یک پشتیبان فروشگاه {store_name} هستی. مودب، سریع، فروشنده حرفه‌ای.",
+                },
+                {"role": "user", "content": user_message},
+            ],
+        )
 
-
-        return StreamingHttpResponse(stream(), content_type="text/plain")
+        answer = response.choices[0].message.content if response.choices else ""
+        return Response({"response": answer})
     
     
     
@@ -68,8 +61,6 @@ class ChatBotView(APIView):
         user_msg = request.data.get("message")
         store_name = get_store_name()
 
-        if client is None:
-            return Response({"error": "سرویس هوش مصنوعی فعال نیست."}, status=503)
 
         products = fetch_products()
 
@@ -91,23 +82,23 @@ class ChatBotView(APIView):
 - جواب‌ها باید کاملاً مودب، طبیعی، روان و فروشنده‌گونه باشند.
 """
 
-        def stream():
-            response = client.chat.completions.create(
-                model="gpt-4o-mini",
-                stream=True,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_msg},
-                ]
-            )
-            for chunk in response:
-                if chunk.choices:
-                    delta = chunk.choices[0].delta.get("content")
-                    if delta:
-                        yield delta
-            
-        return StreamingHttpResponse(stream(), content_type="text/plain")
+        if client is None:
+            fallback = f"سرویس هوش مصنوعی فعال نیست اما خوشحال می‌شویم در فروشگاه {store_name} به شما کمک کنیم. لطفا موضوع یا محصول مورد نظرتان را بنویسید."
+            return Response({"response": fallback}, status=200)
 
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                 {
+                    "role": "system",
+                    "content": f"تو یک پشتیبان فروشگاه {store_name} هستی. مودب، سریع، فروشنده حرفه‌ای.",
+                },
+                {"role": "user", "content": user_message},
+            ],
+        )
+
+        answer = response.choices[0].message.content if response.choices else ""
+        return Response({"response": answer})
 
 
 

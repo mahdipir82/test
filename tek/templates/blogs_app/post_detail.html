@@ -31,7 +31,12 @@
             </div>
 
             <div class="p-8">
-                <h1 class="text-4xl font-bold mb-4 dark:text-white">{{ post.title }}</h1>
+                  <div class="flex items-center gap-3 mb-3">
+                    <h1 class="text-4xl font-bold dark:text-white">{{ post.title }}</h1>
+                    {% if post.category %}
+                    <span class="px-3 py-1 rounded-full text-xs font-semibold bg-[#008B8B]/10 text-[#006666] dark:bg-slate-800 dark:text-teal-200 border border-[#008B8B]/30">{{ post.category.name }}</span>
+                    {% endif %}
+                </div>  
                 <div class="flex items-center gap-4 text-sm text-gray-500 mb-6">
                     <span>میانگین امتیاز: {{ post.average_rating }}</span>
                     <span>تعداد نظرات تایید شده: {{ approved_comments.count }}</span>
