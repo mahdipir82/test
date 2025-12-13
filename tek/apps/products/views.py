@@ -102,12 +102,14 @@ def accessories_page(request):
     return render(request, "products_app/accessories.html", {"products": products})
 def product_detail(request, slug):
     product = get_object_or_404(Product, slug=slug, is_active=True)
-    approved_reviews = product.approved_reviews.order_by('-created_at').prefetch_related('replies')
     approved_replies = Prefetch(
         'replies',
         queryset=ProductReviewReply.objects.filter(is_approved=True).select_related('user'),
     )
-    approved_reviews = product.approved_reviews.order_by('-created_at').prefetch_related(approved_replies)
+    approved_reviews = (
+        product.approved_reviews.order_by('-created_at').prefetch_related(approved_replies)
+    )
+    average_rating = product.average_rating
     review_form = ProductReviewForm()
     reply_form = ProductReviewReplyForm()
 
@@ -155,7 +157,7 @@ def product_detail(request, slug):
         {
             "product": product,
             "reviews": approved_reviews,
-            "average_rating": round(average_rating, 1) if average_rating else 0,
+            "average_rating": average_rating,
             "form": review_form,
             "reply_form": reply_form,
         },
