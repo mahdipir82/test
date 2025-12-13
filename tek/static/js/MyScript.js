@@ -14,7 +14,8 @@ let authMode = 'login';
 let products = {};
 let organizedProducts = {};
 const blogPosts = [];
-const storeName = window.STORE_NAME || 'تک‌استور';   
+const storeName = window.STORE_NAME || 'تک‌استور';
+const PENDING_REVIEWS_KEY = 'pendingProductReviews';  
 // Sample Products Data
 
 // ==========================
@@ -1671,7 +1672,52 @@ function closeImageZoom() {
 function addToWishlist() {
     showNotification('محصول به لیست علاقه‌مندی‌ها اضافه شد');
 }
+function getPendingReviewsMap() {
+    try {
+        return JSON.parse(localStorage.getItem(PENDING_REVIEWS_KEY)) || {};
+    } catch (error) {
+        return {};
+    }
+}
 
+function savePendingReviewsMap(map) {
+    localStorage.setItem(PENDING_REVIEWS_KEY, JSON.stringify(map));
+}
+
+function getPendingReviews(slug) {
+    const pendingMap = getPendingReviewsMap();
+    return pendingMap[slug] || [];
+}
+
+function addPendingReview(slug, review) {
+    const pendingMap = getPendingReviewsMap();
+    const current = pendingMap[slug] || [];
+    pendingMap[slug] = [review, ...current];
+    savePendingReviewsMap(pendingMap);
+}
+
+function syncPendingReviews(slug, approvedReviews = []) {
+    const pending = getPendingReviews(slug);
+    if (!pending.length) return pending;
+
+    const filteredPending = pending.filter(pendingReview => {
+        return !approvedReviews.some(approved => {
+            return (
+                (approved.display_name === pendingReview.display_name || approved.name === pendingReview.display_name) &&
+                approved.comment === pendingReview.comment &&
+                Number(approved.rating) === Number(pendingReview.rating)
+            );
+        });
+    });
+
+    if (filteredPending.length !== pending.length) {
+        const pendingMap = getPendingReviewsMap();
+        pendingMap[slug] = filteredPending;
+        savePendingReviewsMap(pendingMap);
+    }
+
+    return filteredPending;
+}
 function openReviewModal() {
     const reviewModal = document.createElement('div');
     reviewModal.className = 'modal active';
@@ -1774,13 +1820,16 @@ async function submitReview(e) {
 
      const pendingReview = {
             display_name: name,
+            email,
             rating: rating,
             comment: comment,
             created_at: new Date().toISOString(),
             pending: true
         };
 
-     currentProductReviews = [pendingReview, ...currentProductReviews];
+     addPendingReview(currentProduct.slug, pendingReview);
+
+        currentProductReviews = [pendingReview, ...currentProductReviews];
         renderProductReviewList(currentProductReviews);
         updateModalRating(data.average_rating ?? currentProduct.average_rating ?? 0, data.review_count ?? currentProduct.review_count ?? 0);
 
@@ -1862,9 +1911,19 @@ async function fetchProductReviews(slug) {
      try {
         const response = await fetch(`/products/api/${slug}/reviews/`);
         if (!response.ok) throw new Error('NETWORK');
-        return await response.json();
+         const data = await response.json();
+        const approvedReviews = data.reviews || [];
+        const pendingReviews = syncPendingReviews(slug, approvedReviews);
+        const mergedReviews = [...pendingReviews, ...approvedReviews];
+
+        return {
+            ...data,
+            reviews: mergedReviews,
+            review_count: mergedReviews.length,
+        };
     } catch (error) {
-        return { reviews: [], average_rating: 0, review_count: 0 };
+        const pendingReviews = getPendingReviews(slug);
+        return { reviews: pendingReviews, average_rating: 0, review_count: pendingReviews.length };
     }
 }
 
