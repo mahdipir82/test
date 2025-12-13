@@ -69,7 +69,7 @@ class RegisterUserForm(forms.ModelForm):
         mobile = self.cleaned_data.get("mobile_number")
         if not re.match(r"^09\d{9}$", mobile):
             raise ValidationError("شماره موبایل وارد شده صحیح نمی‌باشد. (مثال: 09123456789)")
-        if CustomUser.objects.filter(mobile_number=mobile).exists():
+        if CustomUser.objects.filter(mobile_number=mobile, is_active=True).exists():
             raise ValidationError("این شماره موبایل قبلاً ثبت‌نام کرده است.")
         return mobile
 
