@@ -156,14 +156,15 @@ class ProductGalleryAdmin(admin.ModelAdmin):
 
 @admin.register(ProductReview)
 class ProductReviewAdmin(admin.ModelAdmin):
-    list_display = ('product', 'name', 'rating_stars', 'status_badge', 'is_approved', 'created_at')
+    list_display = ('product', 'name', 'phone_number', 'rating_stars', 'status_badge', 'is_approved', 'created_at')
     list_filter = ('is_approved', 'rating', 'created_at')
-    search_fields = ('product__name', 'name', 'email', 'comment')
+    search_fields = ('product__name', 'name', 'email', 'phone_number', 'comment')
     readonly_fields = (
         'product',
         'user',
         'name',
         'email',
+        'phone_number',
         'rating',
         'comment',
         'created_at',

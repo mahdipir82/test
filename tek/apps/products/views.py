@@ -68,6 +68,7 @@ class ProductReviewAPIView(APIView):
                 product=product,
                 name=serializer.validated_data["name"],
                 email=serializer.validated_data.get("email"),
+                phone_number=serializer.validated_data.get("phone_number", ""),
                 rating=serializer.validated_data["rating"],
                 comment=serializer.validated_data["comment"],
                 user=request.user if request.user.is_authenticated else None,

@@ -217,6 +217,7 @@ class ProductReview(models.Model):
     )
     name = models.CharField(max_length=120, verbose_name='نام')
     email = models.EmailField(verbose_name='ایمیل')
+    phone_number = models.CharField(max_length=20, blank=True, verbose_name="شماره موبایل")
     rating = models.PositiveSmallIntegerField(choices=RATING_CHOICES, verbose_name='امتیاز')
     comment = models.TextField(verbose_name='متن نظر')
     is_approved = models.BooleanField(default=False, verbose_name='تایید شده')

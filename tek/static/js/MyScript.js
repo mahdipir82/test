@@ -1939,6 +1939,7 @@ function renderProductReviewList(reviews) {
     container.innerHTML = reviews.map(review => {
         const name = review.display_name || review.name || 'کاربر';
         const dateText = review.created_at ? new Date(review.created_at).toLocaleDateString('fa-IR') : '';
+        const isPending = Boolean(review.pending);
         const pendingBadge = isPending ? '<span class="px-2 py-1 rounded-lg bg-yellow-100 text-yellow-700 text-xs">در انتظار تایید</span>' : '';
 
         return `
