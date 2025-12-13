@@ -1,5 +1,6 @@
 import importlib.util
 import json
+import os
 import uuid
 from django.http import JsonResponse, StreamingHttpResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -7,9 +8,11 @@ from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-if importlib.util.find_spec("openai"):
+api_key = os.environ.get("OPENAI_API_KEY")
+if importlib.util.find_spec("openai") and api_key:
     from openai import OpenAI  # type: ignore
-    client = OpenAI(api_key="YOUR_API_KEY_HERE")
+    
+    client = OpenAI(api_key=api_key)
 else:
     OpenAI = None  # type: ignore
     client = None
@@ -59,6 +62,8 @@ class ChatBotView(APIView):
 
     def post(self, request):
         user_msg = request.data.get("message")
+        if not user_msg:
+            return Response({"error": "پیامی ارسال نشده."}, status=400)
         store_name = get_store_name()
 
 
@@ -91,9 +96,9 @@ class ChatBotView(APIView):
             messages=[
                  {
                     "role": "system",
-                    "content": f"تو یک پشتیبان فروشگاه {store_name} هستی. مودب، سریع، فروشنده حرفه‌ای.",
+                    "content": system_prompt,
                 },
-                {"role": "user", "content": user_message},
+                 {"role": "user", "content": user_msg},
             ],
         )
 
