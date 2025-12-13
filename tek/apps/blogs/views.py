@@ -43,7 +43,22 @@ def about(request):
 def post_detail(request, slug):
     post = get_object_or_404(BlogPost, slug=slug, is_published=True)
     approved_comments = post.comments.filter(is_approved=True).select_related("user").order_by("-created_at")
+    pending_comments_map = request.session.get("pending_blog_comments", {})
+    post_pending_ids = pending_comments_map.get(str(post.id), [])
+    pending_comments_qs = post.comments.filter(
+        id__in=post_pending_ids, is_approved=False
+    ).select_related("user")
 
+    if request.user.is_authenticated:
+        pending_comments_qs = pending_comments_qs.filter(
+            Q(user=request.user) | Q(user__isnull=True)
+        )
+
+    pending_comments = list(pending_comments_qs)
+    valid_pending_ids = [comment.id for comment in pending_comments]
+    if valid_pending_ids != post_pending_ids:
+        pending_comments_map[str(post.id)] = valid_pending_ids
+        request.session["pending_blog_comments"] = pending_comments_map
     if request.method == 'POST':
         form = BlogCommentForm(request.POST)
         if form.is_valid():
@@ -57,6 +72,12 @@ def post_detail(request, slug):
                     comment.email = request.user.email
             comment.is_approved = False
             comment.save()
+            pending_comments_map = request.session.get("pending_blog_comments", {})
+            post_pending_ids = pending_comments_map.get(str(post.id), [])
+            if comment.id not in post_pending_ids:
+                post_pending_ids.append(comment.id)
+                pending_comments_map[str(post.id)] = post_pending_ids
+                request.session["pending_blog_comments"] = pending_comments_map
             messages.success(request, 'نظر شما پس از تایید ادمین نمایش داده خواهد شد.')
             return redirect('blogs:post_detail', slug=post.slug)
     else:
@@ -75,5 +96,6 @@ def post_detail(request, slug):
             'post': post,
             'form': form,
             'approved_comments': approved_comments,
+            'pending_comments': pending_comments,
         },
     )
