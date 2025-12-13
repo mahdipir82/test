@@ -44,7 +44,12 @@ class ProductReviewAPIView(APIView):
 
     def get(self, request, slug):
         product = get_object_or_404(Product, slug=slug, is_active=True)
-        reviews = product.approved_reviews.order_by("-created_at")
+        reviews_qs = product.reviews.order_by("-created_at")
+
+        if not request.user.is_staff:
+            reviews_qs = reviews_qs.filter(is_approved=True)
+
+        reviews = reviews_qs
         serializer = ProductReviewSerializer(reviews, many=True)
         return JsonResponse(
             {

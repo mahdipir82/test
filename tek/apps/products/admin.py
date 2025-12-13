@@ -156,7 +156,7 @@ class ProductGalleryAdmin(admin.ModelAdmin):
 
 @admin.register(ProductReview)
 class ProductReviewAdmin(admin.ModelAdmin):
-    list_display = ('product', 'name', 'rating_stars', 'status_badge', 'created_at')
+    list_display = ('product', 'name', 'rating_stars', 'status_badge', 'is_approved', 'created_at')
     list_filter = ('is_approved', 'rating', 'created_at')
     search_fields = ('product__name', 'name', 'email', 'comment')
     readonly_fields = (
@@ -166,10 +166,10 @@ class ProductReviewAdmin(admin.ModelAdmin):
         'email',
         'rating',
         'comment',
-        'is_approved',
         'created_at',
     )
     ordering = ('-created_at',)
+    list_editable = ('is_approved',)
     actions = ['approve_reviews', 'reject_reviews']
 
     def rating_stars(self, obj):
