@@ -237,7 +237,10 @@ class ProductReview(models.Model):
         if self.user:
             return self.user.username
         return self.name
-
+    
+    @property
+    def approved_replies(self):
+        return self.replies.filter(is_approved=True)
 
 class ProductReviewReply(models.Model):
     review = models.ForeignKey(

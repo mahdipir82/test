@@ -70,18 +70,18 @@
                     </div>
                     <p class="text-gray-700 dark:text-gray-300 mb-3">{{ review.comment }}</p>
 
-                    {% if review.replies.all %}
+                    {% if review.approved_replies %}
                         <div class="space-y-2 bg-gray-50 dark:bg-gray-800 p-3 rounded-lg mb-3">
-                            {% for reply in review.replies.all %}
-                                {% if reply.is_approved %}
-                                    <div class="border-b border-gray-200 dark:border-gray-700 pb-2 last:border-0 last:pb-0">
-                                        <div class="flex items-center justify-between text-sm text-gray-600 dark:text-gray-300">
-                                            <span class="font-semibold">{{ reply.display_name }}</span>
-                                            <span class="text-xs text-gray-400">{{ reply.created_at|date:"Y/m/d" }}</span>
+                              {% for reply in review.approved_replies %}
+                                <div class="border-b border-gray-200 dark:border-gray-700 pb-2 last:border-0 last:pb-0">
+                                    <div class="flex items-center justify-between text-sm text-gray-600 dark:text-gray-300">
+                                        <span class="font-semibold">{{ reply.display_name }}</span>
+                                        <span class="text-xs text-gray-400">{{ reply.created_at|date:"Y/m/d" }}</span>
                                         </div>
                                         <p class="text-gray-700 dark:text-gray-200 text-sm mt-1">{{ reply.comment }}</p>
                                     </div>
-                                {% endif %}
+                                   <p class="text-gray-700 dark:text-gray-200 text-sm mt-1">{{ reply.comment }}</p>
+                                </div>
                             {% empty %}
                                 <p class="text-sm text-gray-500">هنوز پاسخی ثبت نشده است.</p>
                             {% endfor %}

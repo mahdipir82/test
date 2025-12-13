@@ -159,9 +159,18 @@ class ProductReviewAdmin(admin.ModelAdmin):
     list_display = ('product', 'name', 'rating_stars', 'status_badge', 'created_at')
     list_filter = ('is_approved', 'rating', 'created_at')
     search_fields = ('product__name', 'name', 'email', 'comment')
-    readonly_fields = ('created_at',)
+    readonly_fields = (
+        'product',
+        'user',
+        'name',
+        'email',
+        'rating',
+        'comment',
+        'is_approved',
+        'created_at',
+    )
     ordering = ('-created_at',)
-    actions = ['approve_reviews']
+    actions = ['approve_reviews', 'reject_reviews']
 
     def rating_stars(self, obj):
         stars = '★' * obj.rating + '☆' * (5 - obj.rating)
@@ -187,15 +196,32 @@ class ProductReviewAdmin(admin.ModelAdmin):
     def approve_reviews(self, request, queryset):
          queryset.update(is_approved=True)
 
+    @admin.action(description='رد نظرات انتخاب شده')
+    def reject_reviews(self, request, queryset):
+        queryset.update(is_approved=False)
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_superuser
+
 
 @admin.register(ProductReviewReply)
 class ProductReviewReplyAdmin(admin.ModelAdmin):
     list_display = ("review", "name", "status_badge", "created_at")
     list_filter = ("is_approved", "created_at")
     search_fields = ("review__product__name", "name", "comment")
-    readonly_fields = ("created_at",)
-    actions = ["approve_replies"]
-
+    readonly_fields = (
+        "review",
+        "user",
+        "name",
+        "email",
+        "comment",
+        "is_approved",
+        "created_at",
+    )
+    actions = ["approve_replies", "reject_replies"]
     def status_badge(self, obj):
         if obj.is_approved:
             return format_html(
@@ -212,3 +238,13 @@ class ProductReviewReplyAdmin(admin.ModelAdmin):
     @admin.action(description="تایید پاسخ‌های انتخاب شده")
     def approve_replies(self, request, queryset):
         queryset.update(is_approved=True)
+
+    @admin.action(description="رد پاسخ‌های انتخاب شده")
+    def reject_replies(self, request, queryset):
+        queryset.update(is_approved=False)
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_superuser

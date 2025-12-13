@@ -107,7 +107,9 @@ def product_detail(request, slug):
         queryset=ProductReviewReply.objects.filter(is_approved=True).select_related('user'),
     )
     approved_reviews = (
-        product.approved_reviews.order_by('-created_at').prefetch_related(approved_replies)
+         product.approved_reviews.select_related('user')
+        .order_by('-created_at')
+        .prefetch_related(approved_replies)
     )
     average_rating = product.average_rating
     review_form = ProductReviewForm()
